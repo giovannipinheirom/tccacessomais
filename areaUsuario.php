@@ -31,6 +31,7 @@
         $plano = "Sem Plano";
     }
 
+	$CPF = preg_replace('/\D/', '', (string)$CPF); // aceita CPF gravado com ou sem pontuação
 	$cpfFormatado = "***." . substr($CPF, 3, 3) . "." . substr($CPF, 6, 3) . "-**";
 	$matricula = sprintf('%09d', $IdUsuario);
     $validade = date("m/Y", strtotime("+1 year"));

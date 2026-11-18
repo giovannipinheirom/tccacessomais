@@ -30,6 +30,7 @@
         $status = "Pendente";
     }
 
+	$CPF = preg_replace('/\D/', '', (string)$CPF); // aceita CPF gravado com ou sem pontuação
 	$cpfFormatado = substr($CPF, 0, 3) . "." . substr($CPF, 3, 3) . "." . substr($CPF, 6, 3) . "-" . substr($CPF, 9, 2);
 	$matricula = sprintf('%09d', $IdUsuario);
     $statusClass = (strtolower($status) == 'ativo') ? 'confirmado' : 'pendente';

@@ -14,6 +14,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso+ | Rede Credenciada</title>
     <link rel="stylesheet" href="css/areaUsuario.css">
+    <!-- Mapa com OpenStreetMap + Leaflet (gratuito, não precisa de chave de API) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <?php include 'menuUsuario.php'; ?>
@@ -30,7 +33,7 @@
         <section class="acesso-rapido mt-0">
             <h2>Mapa da Rede Credenciada</h2>
 
-            <!-- Div onde o Google Maps será renderizado -->
+            <!-- Div onde o mapa (OpenStreetMap) será renderizado -->
             <div id="map" class="map-container"></div>
 
             <?php
@@ -49,61 +52,29 @@
 
             <script>
                 // Passa os dados do PHP (Banco de Dados) para o JavaScript
-                const locaisMedicos = <?php echo json_encode($medicosArray); ?>;
+                const locaisMedicos = <?php echo json_encode($medicosArray); ?>
+                    .map(m => ({ ...m, lat: parseFloat(m.Latitude_Profissional), lng: parseFloat(m.Longitude_Profissional) }))
+                    .filter(m => !isNaN(m.lat) && !isNaN(m.lng));
 
-                function initMap() {
-                    // Posição central padrão (ex: Centro do Brasil ou São Paulo)
-                    // Se houver médicos, centraliza no primeiro. Se não, usa um padrão.
-                    let centroMap = { lat: -23.5505, lng: -46.6333 }; // SP padrão
-                    
-                    if(locaisMedicos.length > 0) {
-                        centroMap = { 
-                            lat: parseFloat(locaisMedicos[0].Latitude_Profissional), 
-                            lng: parseFloat(locaisMedicos[0].Longitude_Profissional) 
-                        };
-                    }
+                // Centraliza no primeiro profissional ou, se não houver nenhum, em São Paulo
+                const centro = locaisMedicos.length ? [locaisMedicos[0].lat, locaisMedicos[0].lng] : [-23.5505, -46.6333];
+                const mapa = L.map('map').setView(centro, 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; colaboradores do OpenStreetMap'
+                }).addTo(mapa);
 
-                    // Cria o mapa no HTML
-                    const map = new google.maps.Map(document.getElementById("map"), {
-                        zoom: 12,
-                        center: centroMap,
-                        mapTypeId: "roadmap"
-                    });
-
-                    // Cria o InfoWindow (o balãozinho que abre ao clicar no pino)
-                    const infoWindow = new google.maps.InfoWindow();
-
-                    // Faz um laço de repetição para colocar um pino para cada médico
-                    locaisMedicos.forEach((medico) => {
-                        const posicao = {
-                            lat: parseFloat(medico.Latitude_Profissional),
-                            lng: parseFloat(medico.Longitude_Profissional)
-                        };
-
-                        const marker = new google.maps.Marker({
-                            position: posicao,
-                            map: map,
-                            title: medico.Nome_Profissional,
-                            animation: google.maps.Animation.DROP
-                        });
-
-                        // Quando o usuário clicar no pino, mostra as informações
-                        marker.addListener("click", () => {
-                            const conteudoBalao = `
-                                <div>
-                                    <h3 class="info-window-title">${medico.Nome_Profissional}</h3>
-                                    <p class="info-window-text"><strong>Especialidade:</strong> ${medico.Especialidade_Profissional}</p>
-                                    <p class="info-window-text"><strong>Endereço:</strong> ${medico.Rua_Profissional}, ${medico.Numero_Profissional}</p>
-                                </div>
-                            `;
-                            infoWindow.setContent(conteudoBalao);
-                            infoWindow.open(map, marker);
-                        });
-                    });
-                }
+                // Um pino para cada profissional; o balão mostra nome, especialidade e endereço
+                locaisMedicos.forEach(medico => {
+                    const balao = document.createElement('div');
+                    const titulo = document.createElement('h3'); titulo.className = 'info-window-title'; titulo.textContent = medico.Nome_Profissional;
+                    const esp = document.createElement('p'); esp.className = 'info-window-text'; esp.textContent = 'Especialidade: ' + medico.Especialidade_Profissional;
+                    const end = document.createElement('p'); end.className = 'info-window-text'; end.textContent = 'Endereço: ' + (medico.Rua_Profissional || '') + ', ' + (medico.Numero_Profissional || '');
+                    balao.append(titulo, esp, end);
+                    L.marker([medico.lat, medico.lng], { title: medico.Nome_Profissional }).addTo(mapa).bindPopup(balao);
+                });
+                if (locaisMedicos.length > 1) mapa.fitBounds(locaisMedicos.map(m => [m.lat, m.lng]), { padding: [40, 40] });
             </script>
-            <!-- Carrega a API do Google Maps usando a chave que está no conexao.php -->
-            <script async defer src="https://maps.googleapis.com/maps/api/js?key=<?php echo $google_maps_api_key; ?>&callback=initMap"></script>
         </section>
     </main>
 
