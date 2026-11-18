@@ -8,9 +8,11 @@
         $CPF = $_POST['CPF'];
         $senha = $_POST['senha'];
 
-        $comando = "SELECT * FROM Cadastro_Users WHERE CPF_User = ?";
+        // Aceita o CPF com ou sem pontuação (cadastros feitos pelo aplicativo gravam o CPF formatado)
+        $cpfDigitos = preg_replace('/\D/', '', $CPF);
+        $comando = "SELECT * FROM Cadastro_Users WHERE CPF_User = ? OR REPLACE(REPLACE(CPF_User, '.', ''), '-', '') = ? LIMIT 1";
 
-        $resultado = $con->query($comando, [$CPF]);
+        $resultado = $con->query($comando, [$CPF, $cpfDigitos]);
         $usuario = $resultado ? $resultado->fetch_assoc() : null;
 
         // A senha é conferida pelo hash (password_verify), nunca comparada em texto puro no SQL

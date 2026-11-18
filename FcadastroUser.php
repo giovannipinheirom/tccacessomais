@@ -13,8 +13,8 @@ $senha =$_POST['senha'];
 // A senha é gravada criptografada (password_hash) no momento do INSERT
 
 // Verifica se o CPF ou E-mail já estão cadastrados
-$comandoVerifica = "SELECT * FROM Cadastro_Users WHERE CPF_User = ? OR Email_User = ?";
-$resultadoVerifica = $con->query($comandoVerifica, [$CPF, $email]);
+$comandoVerifica = "SELECT * FROM Cadastro_Users WHERE CPF_User = ? OR REPLACE(REPLACE(CPF_User, '.', ''), '-', '') = ? OR Email_User = ?";
+$resultadoVerifica = $con->query($comandoVerifica, [$CPF, preg_replace('/\D/', '', $CPF), $email]);
 
 if($resultadoVerifica && $resultadoVerifica->num_rows > 0)
 {
