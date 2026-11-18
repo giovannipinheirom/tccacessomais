@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS Cadastro_Users (
     Latitude_User VARCHAR(50),
     Longitude_User VARCHAR(50),
     Email_User VARCHAR(255) NOT NULL UNIQUE,
-    Senha_User VARCHAR(255) NOT NULL,
+    Senha_User VARCHAR(255) NOT NULL, -- hash bcrypt (password_hash)
     Id_Plano INT REFERENCES Planos(Id_Plano),
     Status_Pagamento VARCHAR(50) DEFAULT 'Pendente',
     Token_Senha VARCHAR(100) NULL,
@@ -65,7 +65,9 @@ CREATE TABLE IF NOT EXISTS Cadastro_Profissionais (
     Dta_Nasc_Profissional DATE NOT NULL,
     Genero_Profissional VARCHAR(50) NOT NULL,
     Num_Tel_Profissional VARCHAR(20) NOT NULL,
-    Senha_Profissional VARCHAR(255) NOT NULL
+    Senha_Profissional VARCHAR(255) NOT NULL, -- hash bcrypt (password_hash)
+    Token_Senha VARCHAR(100) NULL,
+    Expiracao_Token TIMESTAMP NULL
 );
 
 -- 3. Criação da tabela de Agendamentos
@@ -80,6 +82,17 @@ CREATE TABLE IF NOT EXISTS Consultas (
     Data_Criacao_Consulta TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Registra quando a consulta foi marcada
 );
 
+-- 4. Mensagens enviadas pelo formulário "Fale Conosco"
+CREATE TABLE IF NOT EXISTS Mensagens_Contato (
+    Id_Mensagem SERIAL PRIMARY KEY,
+    Nome_Contato VARCHAR(255) NOT NULL,
+    Email_Contato VARCHAR(255) NOT NULL,
+    Assunto_Contato VARCHAR(150) NOT NULL,
+    Mensagem_Contato TEXT NOT NULL,
+    Data_Envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Lida BOOLEAN DEFAULT FALSE
+);
+
 CREATE INDEX IF NOT EXISTS idx_consultas_profissional_data ON Consultas (Id_Profissional, Data_Consulta);
 CREATE INDEX IF NOT EXISTS idx_consultas_user ON Consultas (Id_User);
 
@@ -89,6 +102,7 @@ ALTER TABLE Planos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Cadastro_Users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Cadastro_Profissionais ENABLE ROW LEVEL SECURITY;
 ALTER TABLE Consultas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE Mensagens_Contato ENABLE ROW LEVEL SECURITY;
 
 -- --------------------------------------------------------
 -- Fim do Script

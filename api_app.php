@@ -213,12 +213,16 @@ switch ($action) {
              FROM Cadastro_Users u
              LEFT JOIN Planos p ON u.Id_Plano = p.Id_Plano
              WHERE (u.Email_User = ? OR u.CPF_User = ? OR REPLACE(REPLACE(u.CPF_User, '.', ''), '-', '') = ?)
-               AND u.Senha_User = ?
              LIMIT 1";
-        $stmt_params = [$login, $login, $cpfLimpo, $senha];
+        $stmt_params = [$login, $login, $cpfLimpo];
         $res = $con->query($stmt_sql, $stmt_params);
 
-        if ($row = $res->fetch_assoc()) {
+        $row = $res ? $res->fetch_assoc() : null;
+        if ($row && senha_confere($senha, $row['Senha_User'])) {
+            // Cadastros antigos (senha sem criptografia) são convertidos para hash no primeiro login
+            if (senha_precisa_hash($row['Senha_User'])) {
+                $con->query("UPDATE Cadastro_Users SET Senha_User = ? WHERE Id_User = ?", [senha_hash($senha), (int)$row['Id_User']]);
+            }
             responder(['ok' => true, 'usuario' => montarUsuarioJson($row)]);
         }
         responder(['ok' => false, 'erro' => 'E-mail/CPF ou senha inválidos.'], 401);
@@ -269,7 +273,7 @@ switch ($action) {
                  CEP_User, Numero_User, Email_User, Senha_User, Id_Plano, Status_Pagamento)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              RETURNING Id_User";
-        $stmtIns_params = [$nome, $dtaNasc, $genero, $cpfFormatado, $estCivil, $telefone, $cep, $numero, $email, $senha, $idPlano, $statusPag];
+        $stmtIns_params = [$nome, $dtaNasc, $genero, $cpfFormatado, $estCivil, $telefone, $cep, $numero, $email, senha_hash($senha), $idPlano, $statusPag];
         $stmtIns_res = $con->query($stmtIns_sql, $stmtIns_params);
         if (!$stmtIns_res) {
             $erroSql = $con->error;
@@ -327,7 +331,7 @@ switch ($action) {
 
         if ($senha !== '') {
             $stmt_sql = "UPDATE Cadastro_Users SET Nome_User = ?, Email_User = ?, CPF_User = ?, Senha_User = ? WHERE Id_User = ?";
-            $stmt_params = [$nome, $email, $cpf, $senha, $idUser];
+            $stmt_params = [$nome, $email, $cpf, senha_hash($senha), $idUser];
         } else {
             $stmt_sql = "UPDATE Cadastro_Users SET Nome_User = ?, Email_User = ?, CPF_User = ? WHERE Id_User = ?";
             $stmt_params = [$nome, $email, $cpf, $idUser];

@@ -75,7 +75,7 @@ $comando = "INSERT INTO Cadastro_Profissionais
             VALUES 
             (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-if ($con->query($comando, [$nome, $email, $cpf, $registro, $uf_registro, $cep, $numero, $rua, $bairro, $cidade, $latitude, $longitude, $especialidade, $data_nasc, $genero, $telefone, $senha])) {
+if ($con->query($comando, [$nome, $email, $cpf, $registro, $uf_registro, $cep, $numero, $rua, $bairro, $cidade, $latitude, $longitude, $especialidade, $data_nasc, $genero, $telefone, senha_hash($senha)])) {
     echo "<script>
             alert('Profissional cadastrado com sucesso! Agora você já pode fazer login');
             window.location.href = 'loginProfissional.html';

@@ -10,7 +10,7 @@ $data_nasc =$_POST['data_nasc'];
 $genero =$_POST['genero'];
 $est_civil =$_POST['est_civil'];
 $senha =$_POST['senha'];
-//Após testes passar a senha para hash para criptografar
+// A senha é gravada criptografada (password_hash) no momento do INSERT
 
 // Verifica se o CPF ou E-mail já estão cadastrados
 $comandoVerifica = "SELECT * FROM Cadastro_Users WHERE CPF_User = ? OR Email_User = ?";
@@ -83,7 +83,7 @@ $comando = "INSERT INTO Cadastro_Users
     VALUES 
     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')";
 
-$resulta = $con->query($comando, [$nome, $data_nasc, $genero, $CPF, $CEP, $numero, $rua, $bairro, $cidade, $latitude, $longitude, $email, $senha, $telefone, $est_civil, $id_plano]);
+$resulta = $con->query($comando, [$nome, $data_nasc, $genero, $CPF, $CEP, $numero, $rua, $bairro, $cidade, $latitude, $longitude, $email, senha_hash($senha), $telefone, $est_civil, $id_plano]);
 
 if ($resulta) {
     // Exibe um alerta e redireciona o usuário para a tela de login

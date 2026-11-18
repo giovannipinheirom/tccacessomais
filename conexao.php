@@ -41,7 +41,56 @@ const COLUNAS_DO_BANCO = [
     'Especialidade_Profissional', 'Dta_Nasc_Profissional', 'Genero_Profissional', 'Num_Tel_Profissional',
     'Senha_Profissional',
     'Id_Consulta', 'Data_Consulta', 'Hora_Consulta', 'Status_Consulta', 'Observacoes_Medico', 'Data_Criacao_Consulta',
+    'Id_Mensagem', 'Nome_Contato', 'Email_Contato', 'Assunto_Contato', 'Mensagem_Contato', 'Data_Envio', 'Lida',
 ];
+
+/** Gera o hash seguro (bcrypt) de uma senha antes de gravar no banco. */
+function senha_hash(string $senha): string
+{
+    return password_hash($senha, PASSWORD_DEFAULT);
+}
+
+/**
+ * Confere a senha digitada com a salva no banco.
+ * Aceita também senhas antigas gravadas sem criptografia (cadastros feitos antes desta versão).
+ */
+function senha_confere(string $digitada, ?string $salva): bool
+{
+    if ($salva === null || $salva === '') return false;
+    if (password_get_info($salva)['algo'] !== null && password_get_info($salva)['algo'] !== 0) {
+        return password_verify($digitada, $salva);
+    }
+    return hash_equals($salva, $digitada);
+}
+
+/** Indica se a senha salva ainda está sem criptografia (para atualizá-la no próximo login). */
+function senha_precisa_hash(?string $salva): bool
+{
+    return $salva !== null && $salva !== '' && password_needs_rehash($salva, PASSWORD_DEFAULT);
+}
+
+/**
+ * Cria no banco as estruturas adicionadas depois da primeira versão (pode rodar várias vezes).
+ * Assim o site se atualiza sozinho, sem precisar rodar SQL manualmente no Supabase.
+ */
+function garantir_estrutura(Banco $con): void
+{
+    static $feito = false;
+    if ($feito) return;
+    $feito = true;
+    $con->query("ALTER TABLE Cadastro_Profissionais ADD COLUMN IF NOT EXISTS Token_Senha VARCHAR(100) NULL");
+    $con->query("ALTER TABLE Cadastro_Profissionais ADD COLUMN IF NOT EXISTS Expiracao_Token TIMESTAMP NULL");
+    $con->query("CREATE TABLE IF NOT EXISTS Mensagens_Contato (
+        Id_Mensagem SERIAL PRIMARY KEY,
+        Nome_Contato VARCHAR(255) NOT NULL,
+        Email_Contato VARCHAR(255) NOT NULL,
+        Assunto_Contato VARCHAR(150) NOT NULL,
+        Mensagem_Contato TEXT NOT NULL,
+        Data_Envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        Lida BOOLEAN DEFAULT FALSE
+    )");
+    $con->query("ALTER TABLE Mensagens_Contato ENABLE ROW LEVEL SECURITY");
+}
 
 /** Resultado de uma consulta, com a mesma "cara" do mysqli (num_rows e fetch_assoc). */
 class Resultado

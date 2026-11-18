@@ -26,6 +26,7 @@ Navegador ───HTTPS──> páginas .php ┘
 4. Em **Variables**, adicione:
    - `DATABASE_URL` = a string do Session pooler do passo 1.3
    - `GOOGLE_MAPS_API_KEY` = sua chave do Google Maps (opcional, só para o mapa da Rede Credenciada)
+   - `ADMIN_USUARIO` e `ADMIN_SENHA` = login do Painel do Administrador (`admin.php`). Sem elas, o painel fica bloqueado.
 5. Aguarde o deploy e teste `https://xxxx.up.railway.app/api_app.php?action=ping`. A resposta deve ser `{"ok":true,...}`.
 
 ## 3. Apontar o app para o site
@@ -36,3 +37,8 @@ Em `app/src/main/java/com/example/acessomais/ApiClient.java`, troque `BASE_URL` 
 ## Testar no computador (opcional)
 
 Copie `.env.example` para `.env`, preencha `DATABASE_URL` e rode `php -S localhost:8000` dentro da pasta `site/`. Precisa ter PHP 8 instalado, com a extensão `pdo_pgsql` ativa.
+
+## Segurança
+
+- As senhas de pacientes e profissionais são gravadas com `password_hash` (bcrypt). Contas antigas, com senha sem criptografia, são convertidas automaticamente no primeiro login.
+- Novas tabelas e colunas (mensagens do Fale Conosco, recuperação de senha do profissional) são criadas automaticamente pelo `conexao.php` (`garantir_estrutura`), sem precisar rodar SQL no Supabase.
