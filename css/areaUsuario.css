@@ -585,3 +585,8 @@ footer {
 
 .status.atrasada { background-color: #fee2e2; color: #b91c1c; }
 .status.realizada { background-color: #e2e8f0; color: #475569; }
+
+
+/* Cards de acesso rápido clicáveis (área do paciente) */
+a.card-link { text-decoration: none; color: inherit; cursor: pointer; }
+a.card-link:focus-visible { outline: 3px solid #2668D7; outline-offset: 3px; }

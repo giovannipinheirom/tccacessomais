@@ -17,6 +17,7 @@
                     <div class="formLogin">
                         <h2>Fazer Login</h2>
                         <form action="FloginUser.php" method="post">
+                            <input type="hidden" name="voltar" id="voltarLogin" value="">
                             <input type="text" name="CPF" placeholder="Digite seu CPF" aria-label="Digite seu CPF" required maxlength="11">
                             <input type="password" name="senha" placeholder="Digite sua senha" aria-label="Digite sua senha" required>
 
@@ -86,5 +87,9 @@
             </div>
         </section>
         <script src="js/loginUser.js"></script>
+    <script>
+        // Guarda a página que o usuário tentou abrir (ex.: atalhos da página inicial) para voltar a ela após o login
+        (function () { var v = new URLSearchParams(location.search).get('voltar'); if (v) document.getElementById('voltarLogin').value = v; })();
+    </script>
 </body>
 </html>

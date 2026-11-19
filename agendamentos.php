@@ -1,7 +1,7 @@
 <?php
     session_start();
     if(!isset($_SESSION['CPF']) || !isset($_SESSION['nome']) || !isset($_SESSION['tipo_conta']) || $_SESSION['tipo_conta'] != 'paciente') {
-        header("location: loginUser.html");
+        header("location: loginUser.html?voltar=agendamentos.php");
         exit();
     }
     include "conexao.php"; // NOVO: Conexão com o banco

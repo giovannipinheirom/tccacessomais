@@ -6,7 +6,7 @@
             unset($_SESSION['senha']);
             unset($_SESSION['nome']);
             unset($_SESSION['tipo_conta']);
-            header("location: loginUser.html");
+            header("location: loginUser.html?voltar=areaUsuario.php");
             exit();
         }
 
@@ -142,29 +142,37 @@
             <h2>Acesso rápido</h2>
 
             <div class="cards">
-                <div class="card-content">
-                    <img src="img/hospital.png" alt="Ícone de hospital" class="card-img">
+                <a href="redeCredenciada.php" class="card-content card-link">
+                    <img src="img/hospital.png" alt="" class="card-img">
                     <div class="card-body">
                         <h3 class="card-title">Rede credenciada</h3>
                         <p class="card-description">Encontre locais acessíveis e qualificados perto de você.</p>
                     </div>
-                </div>
+                </a>
 
-                <div class="card-content">
-                    <img src="img/medico.png" alt="Ícone de profissional de saúde" class="card-img">
+                <a href="agendamentos.php" class="card-content card-link">
+                    <img src="img/medico.png" alt="" class="card-img">
                     <div class="card-body">
-                        <h3 class="card-title">Equipe especializada</h3>
-                        <p class="card-description">Profissionais preparados para o seu cuidado.</p>
+                        <h3 class="card-title">Agendar consulta</h3>
+                        <p class="card-description">Escolha um profissional especializado e um horário livre.</p>
                     </div>
-                </div>
+                </a>
 
-                <div class="card-content">
-                    <img src="img/cuidados-de-saude.png" alt="Ícone de suporte" class="card-img">
+                <a href="meuPlano.php" class="card-content card-link">
+                    <img src="img/pcd.png" alt="" class="card-img">
                     <div class="card-body">
-                        <h3 class="card-title">Suporte prioritário</h3>
-                        <p class="card-description">Atendimento por WhatsApp sempre que precisar.</p>
+                        <h3 class="card-title">Meu plano</h3>
+                        <p class="card-description">Veja a carteirinha, as coberturas e a situação do pagamento.</p>
                     </div>
-                </div>
+                </a>
+
+                <a href="contato.php" class="card-content card-link">
+                    <img src="img/cuidados-de-saude.png" alt="" class="card-img">
+                    <div class="card-body">
+                        <h3 class="card-title">Suporte</h3>
+                        <p class="card-description">Fale com a nossa equipe pelo Fale Conosco.</p>
+                    </div>
+                </a>
             </div>
         </section>
     </main>
