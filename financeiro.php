@@ -68,7 +68,11 @@
     <main>
         <div class="financeiro-container">
 
-            <?php if ($msg === 'aprovado'): ?>
+            <?php if ($msg === 'agendamento_bloqueado'): ?>
+                <div class="alerta-pagamento aviso" role="alert">
+                    Para agendar consultas, a mensalidade do seu plano precisa estar paga. Pague a fatura em aberto abaixo com o Mercado Pago.
+                </div>
+            <?php elseif ($msg === 'aprovado'): ?>
                 <div class="alerta-pagamento sucesso" role="status">
                     Pagamento aprovado com sucesso! Sua fatura foi quitada e seu plano Acesso+ já está Ativo para agendamentos.
                 </div>

@@ -1,79 +1,57 @@
 <?php
-    session_start();
+/* Grava uma nova consulta do paciente (aba Agendamentos). */
+session_start();
 
-    // Bloqueio de segurança
-    if(!isset($_SESSION['id']) || !isset($_SESSION['tipo_conta']) || $_SESSION['tipo_conta'] != 'paciente') {
-        echo "<script>
-                alert('Acesso negado. Faça login como paciente para agendar consultas.');
-                window.location.href = 'loginUser.html';
-              </script>";
-        exit();
-    }
+if (!isset($_SESSION['id']) || ($_SESSION['tipo_conta'] ?? '') !== 'paciente') {
+    header("location: loginUser.html?voltar=agendamentos.php");
+    exit();
+}
 
-    include "conexao.php";
+include "conexao.php";
 
-    // Pega os dados do formulário
-    $id_user = (int)$_SESSION['id'];
-    $id_profissional = (int)($_POST['id_profissional'] ?? 0);
-    $data_consulta = $_POST['data'];
-    $hora_consulta = $_POST['hora'];
-    $status = 'Pendente'; // A clínica/médico confirma depois
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_ok()) {
+    header("location: agendamentos.php?msg=erro");
+    exit();
+}
 
-    // -------------------------------------------------------------------------
-    // NOVO: BLOQUEIO FINANCEIRO - Verifica se o usuário pagou o plano
-    // -------------------------------------------------------------------------
-    $queryStatus = "SELECT Status_Pagamento FROM Cadastro_Users WHERE Id_User = ?";
-    $resultadoStatus = $con->query($queryStatus, [$id_user]);
-    
-    if ($resultadoStatus && $resultadoStatus->num_rows > 0) {
-        $usuario = $resultadoStatus->fetch_assoc();
-        if ($usuario['Status_Pagamento'] !== 'Ativo') {
-            // BLOQUEIA O AGENDAMENTO!
-            echo "<script>
-                    alert('AGENDAMENTO BLOQUEADO!\\n\\nIdentificamos que a mensalidade do seu plano está Pendente.\\nVocê será redirecionado para a área Financeira para regularizar o pagamento.');
-                    window.location.href = 'financeiro.php';
-                  </script>";
-            exit(); // Para o script na hora!
-        }
-    }
+$idUser = (int)$_SESSION['id'];
+$idProfissional = (int)($_POST['id_profissional'] ?? 0);
+$data = trim((string)($_POST['data'] ?? ''));
+$hora = substr(trim((string)($_POST['hora'] ?? '')), 0, 5); // "14:00:00" -> "14:00"
 
-    // -------------------------------------------------------------------------
-    // NOVO: FORÇA A HORA CHEIA E IMPEDE CONFLITO DE AGENDA
-    // -------------------------------------------------------------------------
-    // Força os minutos e segundos para '00' (Ex: 14:30 vira 14:00:00)
-    $hora_formatada = date('H:00:00', strtotime($hora_consulta));
+// Bloqueio financeiro: só agenda quem está com a mensalidade em dia
+$usuario = $con->query("SELECT Status_Pagamento FROM Cadastro_Users WHERE Id_User = ?", [$idUser]);
+$usuario = $usuario ? $usuario->fetch_assoc() : null;
+if (!$usuario || $usuario['Status_Pagamento'] !== 'Ativo') {
+    header("location: financeiro.php?msg=agendamento_bloqueado");
+    exit();
+}
 
-    // Verifica se já existe uma consulta marcada com esse médico, neste mesmo dia e nesta mesma hora
-    $queryConflito = "SELECT Id_Consulta FROM Consultas 
-                      WHERE Id_Profissional = ?
-                      AND Data_Consulta = ?
-                      AND Hora_Consulta = ? 
-                      AND Status_Consulta NOT IN ('Cancelado', 'Cancelada')";
-                      
-    $resultadoConflito = $con->query($queryConflito, [$id_profissional, $data_consulta, $hora_formatada]);
-    
-    if($resultadoConflito && $resultadoConflito->num_rows > 0) {
-        // Já tem alguém agendado nesse horário
-        echo "<script>
-                alert('HORÁRIO INDISPONÍVEL!\\n\\nEste médico já possui um agendamento nesta data e horário.\\nPor favor, escolha um horário diferente (As consultas duram 1 hora).');
-                window.location.href = 'agendamentos.php';
-              </script>";
-        exit();
-    }
+// Valida profissional, data (dia útil, a partir de hoje) e horário (da lista de atendimento e ainda não passado)
+$profissional = $con->query("SELECT 1 FROM Cadastro_Profissionais WHERE Id_Profissional = ?", [$idProfissional]);
+$valido = $profissional && $profissional->num_rows > 0
+    && data_atendimento_valida($data)
+    && in_array($hora, HORARIOS_EXPEDIENTE, true)
+    && ($data . ' ' . $hora) > date('Y-m-d H:i');
+if (!$valido) {
+    header("location: agendamentos.php?msg=invalido");
+    exit();
+}
 
-    // Preparando o comando para salvar no Banco de Dados
-    $comando = "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta) 
-                VALUES (?, ?, ?, ?, ?)";
+// Impede dois agendamentos (ou um bloqueio do médico) no mesmo horário
+$conflito = $con->query(
+    "SELECT 1 FROM Consultas WHERE Id_Profissional = ? AND Data_Consulta = ? AND Hora_Consulta = ?
+     AND Status_Consulta NOT IN ('Cancelado', 'Cancelada')",
+    [$idProfissional, $data, $hora . ':00']
+);
+if ($conflito && $conflito->num_rows > 0) {
+    header("location: agendamentos.php?msg=indisponivel");
+    exit();
+}
 
-    if($con->query($comando, [$id_user, $id_profissional, $data_consulta, $hora_formatada, $status])){
-        echo "<script>
-                alert('Consulta agendada com sucesso! O médico confirmará em breve.');
-                window.location.href = 'agendamentos.php';
-              </script>";
-    } else {
-        echo "<script>
-                alert('Ocorreu um erro ao agendar. Tente novamente.');
-                window.location.href = 'agendamentos.php';
-              </script>";
-    }
-?>
+$ok = $con->query(
+    "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta) VALUES (?, ?, ?, ?, 'Pendente')",
+    [$idUser, $idProfissional, $data, $hora . ':00']
+);
+header("location: agendamentos.php?msg=" . ($ok ? 'agendada' : 'erro'));
+exit();

@@ -1,0 +1,223 @@
+/* Área do profissional: portal, minha agenda, gerenciar agenda e prontuários. Carregue por último. */
+
+body { background-color: #f8fafc; }
+
+.conteudo-prof {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.caixa-prof {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    padding: 26px 28px;
+}
+
+.caixa-prof h2 { color: #0f172a; font-size: 1.25rem; margin-bottom: 16px; }
+
+.texto-suave { color: #64748b; font-size: 0.92rem; line-height: 1.5; }
+
+.link-voltar-prof {
+    align-self: flex-start;
+    color: #2668D7;
+    font-weight: 600;
+    text-decoration: none;
+}
+.link-voltar-prof:hover { text-decoration: underline; }
+
+.btn-prof {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 22px;
+    border: none;
+    border-radius: 12px;
+    background: #2668D7;
+    color: #ffffff;
+    font-size: 0.98rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.btn-prof:hover { background: #0f259e; transform: translateY(-1px); }
+.btn-prof.secundario { background: #ffffff; color: #2668D7; border: 1.5px solid #c7d2fe; }
+.btn-prof.secundario:hover { background: #eef2ff; }
+
+.btn-prof:focus-visible, .item-prof:focus-visible, .link-voltar-prof:focus-visible, .tab-btn:focus-visible {
+    outline: 3px solid #0f259e;
+    outline-offset: 2px;
+}
+
+/* Listas de consultas (prontuários, portal) */
+.lista-prof { display: flex; flex-direction: column; gap: 10px; }
+
+.item-prof {
+    display: grid;
+    grid-template-columns: 64px 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.item-prof:hover { border-color: #b9cdf3; box-shadow: 0 6px 16px rgba(15, 37, 158, 0.08); }
+
+.item-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #2668D7;
+    font-size: 0.85rem;
+}
+.item-data strong { color: #0f259e; font-size: 1rem; }
+.item-nome { color: #0f172a; font-weight: 600; min-width: 0; }
+.item-nome small { display: block; color: #64748b; font-weight: 400; }
+.item-acao { color: #2668D7; font-weight: 700; font-size: 0.9rem; }
+
+/* Prontuário */
+.prontuario-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.ficha-paciente {
+    background: linear-gradient(150deg, #2668D7 0%, #0f259e 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 26px;
+    box-shadow: 0 12px 28px rgba(15, 37, 158, 0.18);
+}
+.ficha-rotulo { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+.ficha-paciente h2 { margin: 6px 0 18px; font-size: 1.35rem; }
+.ficha-paciente dl { display: grid; gap: 12px; margin-bottom: 18px; }
+.ficha-paciente dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+.ficha-paciente dd { font-weight: 600; }
+
+.form-prontuario { display: flex; flex-direction: column; gap: 12px; }
+.form-prontuario label { color: #1e293b; font-weight: 600; }
+.form-prontuario textarea {
+    width: 100%;
+    min-height: 240px;
+    padding: 14px 16px;
+    border: 1.5px solid #d6dbf5;
+    border-radius: 12px;
+    background: #f8faff;
+    color: #0f172a;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+.form-prontuario textarea:focus { outline: none; border-color: #2668D7; background: #ffffff; box-shadow: 0 0 0 4px rgba(38, 104, 215, 0.15); }
+.form-prontuario .btn-prof { align-self: flex-start; }
+
+.anotacoes-salvas {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+    line-height: 1.7;
+    white-space: normal;
+}
+
+/* Portal: números do dia */
+.resumo-numeros {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+.numero-prof {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+}
+a.numero-prof:hover { border-color: #b9cdf3; }
+.numero-prof span { color: #64748b; font-size: 0.85rem; font-weight: 600; }
+.numero-prof strong { color: #0f259e; font-size: 1.9rem; }
+.numero-prof.alerta strong { color: #b91c1c; }
+
+.portal-grid { display: grid; grid-template-columns: 300px 1fr; gap: 24px; align-items: start; }
+
+.perfil-prof {
+    background: linear-gradient(150deg, #2668D7 0%, #0f259e 100%);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 26px;
+}
+.perfil-prof h2 { font-size: 1.2rem; margin-bottom: 16px; }
+.perfil-prof dl { display: grid; gap: 12px; }
+.perfil-prof dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.75; }
+.perfil-prof dd { font-weight: 600; }
+
+/* Minha agenda: usa a largura toda */
+.agenda-container { width: 100%; max-width: 1100px; padding: 24px !important; }
+.grid-agenda { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.tabs { overflow-x: auto; }
+.tab-btn { white-space: nowrap; }
+
+/* Gerenciar agenda */
+.gerenciar-container { width: 100%; max-width: 1100px; padding: 24px !important; }
+.box-bloqueio { background: #ffffff; border-color: #e2e8f0; border-radius: 16px; padding: 22px; }
+.coluna-lista { border-radius: 16px; }
+.form-group input, .form-group select {
+    padding: 12px 14px;
+    border: 1.5px solid #d6dbf5;
+    border-radius: 10px;
+    background: #f8faff;
+    font-size: 0.98rem;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #2668D7; box-shadow: 0 0 0 4px rgba(38, 104, 215, 0.15); }
+.btn-bloquear { border-radius: 10px !important; padding: 12px !important; }
+
+/* Rodapé claro, igual ao do paciente */
+footer.rodape-painel {
+    margin-top: 56px;
+    padding: 24px 16px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .prontuario-grid, .portal-grid { grid-template-columns: 1fr; }
+    .resumo-numeros { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .conteudo-prof, .agenda-container, .gerenciar-container { padding: 20px 16px 0 !important; }
+    .caixa-prof { padding: 20px 18px; }
+    .item-prof { grid-template-columns: 56px 1fr; }
+    .item-prof .status, .item-prof .item-acao { grid-column: 2; justify-self: start; }
+    .coluna-forms, .coluna-lista { min-width: 0 !important; }
+}
+
+.item-prof .status { margin-left: 0 !important; }
+@media (max-width: 600px) {
+    .item-prof { row-gap: 6px; }
+    .item-prof .item-data { grid-row: span 3; align-self: start; }
+}

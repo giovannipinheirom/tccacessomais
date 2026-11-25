@@ -5,6 +5,7 @@
         exit();
     }
     include "conexao.php";
+    garantir_estrutura($con);
 
     $nomeCompleto = $_SESSION['nome'];
     $primeiroNome = explode(' ', trim($nomeCompleto))[0];
@@ -51,6 +52,11 @@
         'premium'   => ['Tudo do plano Plus', 'Rede credenciada ampliada', 'Acompanhamento multidisciplinar', 'Check-up anual'],
     ];
     $msg = $_GET['msg'] ?? '';
+
+    // Início da vigência = data do primeiro pagamento aprovado
+    $primeiroPagamento = $con->query("SELECT MIN(Data_Pagamento) AS inicio FROM Faturas WHERE Id_User = ? AND Status_Fatura = 'Pago'", [(int)$IdUsuario]);
+    $inicioVigencia = $primeiroPagamento ? ($primeiroPagamento->fetch_assoc()['inicio'] ?? null) : null;
+    $inicioVigencia = $inicioVigencia ? date('d/m/Y', strtotime($inicioVigencia)) : 'Após o 1º pagamento';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -127,7 +133,7 @@
                 </div>
                 <div class="detalhe-linha">
                     <span>Início da vigência</span>
-                    <strong>10/03/2024</strong>
+                    <strong><?php echo $inicioVigencia; ?></strong>
                 </div>
                 <div class="detalhe-linha">
                     <span>Situação</span>
@@ -214,7 +220,7 @@
         </section>
     </main>
 
-    <footer style="text-align: center; padding: 20px; margin-top: 40px; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;">
+    <footer class="rodape-painel">
         <p>© 2026 Acesso+ | Painel do Beneficiário</p>
     </footer>
 </body>

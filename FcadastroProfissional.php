@@ -1,17 +1,25 @@
 <?php
 include "conexao.php";
 
-$nome = $_POST['nome'];
-$email = $_POST['email'];
-$telefone = $_POST['telefone'];
-$registro = $_POST['registro'];
-$uf_registro = $_POST['uf_registro'];
-$especialidade = $_POST['especialidade'];
-$cep = preg_replace('/\D/', '', $_POST['CEP']); // só números (evita URL inválida nas APIs de CEP)
-$cpf = $_POST['CPF'];
-$data_nasc = $_POST['data_nasc'];
-$genero = $_POST['genero'];
-$senha = $_POST['senha'];
+$nome = trim((string)($_POST['nome'] ?? ''));
+$email = trim((string)($_POST['email'] ?? ''));
+$telefone = trim((string)($_POST['telefone'] ?? ''));
+$registro = trim((string)($_POST['registro'] ?? ''));
+$uf_registro = trim((string)($_POST['uf_registro'] ?? ''));
+$especialidade = trim((string)($_POST['especialidade'] ?? ''));
+$cep = preg_replace('/\D/', '', (string)($_POST['CEP'] ?? '')); // só números (evita URL inválida nas APIs de CEP)
+$cpf = trim((string)($_POST['CPF'] ?? ''));
+$data_nasc = trim((string)($_POST['data_nasc'] ?? ''));
+$genero = trim((string)($_POST['genero'] ?? ''));
+$senha = (string)($_POST['senha'] ?? '');
+
+// Confere os dados obrigatórios e as regras de senha também no servidor
+$faltandoSenha = problemas_senha((string)$senha);
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
+    $motivo = $faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.';
+    echo "<script>alert(" . json_encode($motivo, JSON_UNESCAPED_UNICODE) . "); window.history.back();</script>";
+    exit();
+}
 
 $comandoVerifica = "SELECT * FROM Cadastro_Profissionais WHERE CPF_Profissional = ? OR Email_Profissional = ? OR Registro_Profissional = ?";
 $resultadoVerifica = $con->query($comandoVerifica, [$cpf, $email, $registro]);
@@ -30,7 +38,7 @@ $urlDaApi = "https://nominatim.openstreetmap.org/search?postalcode={$cep}&countr
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $urlDaApi);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_TIMEOUT, 8);
 curl_setopt($ch, CURLOPT_USERAGENT, "SistemaMedicoTCC/1.0");
 $resposta = curl_exec($ch);
 curl_close($ch);
@@ -57,7 +65,7 @@ $urlViaCEP = "https://viacep.com.br/ws/{$cep}/json/";
 $chCep = curl_init();
 curl_setopt($chCep, CURLOPT_URL, $urlViaCEP);
 curl_setopt($chCep, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($chCep, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($chCep, CURLOPT_TIMEOUT, 8);
 $respostaCep = curl_exec($chCep);
 curl_close($chCep);
 

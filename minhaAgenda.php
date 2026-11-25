@@ -42,7 +42,7 @@
             
             if ($status == 'realizada') {
                 $realizadas[] = $row;
-            } else if ($status == 'cancelado' || $status == 'cancelada') {
+            } else if ($status == 'cancelado' || $status == 'cancelada' || $status == 'bloqueado') {
                 // Se quiser exibir canceladas, crie um array. Por enquanto vamos ignorar ou colocar nas realizadas.
             } else {
                 // Se está pendente, verifica se atrasou
@@ -65,6 +65,7 @@
     <link rel="stylesheet" href="css/areaUsuario.css">
     <link rel="stylesheet" href="css/areaProfissional.css">
     <link rel="stylesheet" href="css/minhaAgenda.css">
+    <link rel="stylesheet" href="css/profissional.css">
 </head>
 <body>
     <?php include 'menuProfissional.php'; ?>
@@ -80,9 +81,9 @@
     <main class="agenda-container">
         <!-- Navegação por abas -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="abrirAba(event, 'aba-futuras')">Por vir (<?php echo count($futuras); ?>)</button>
-            <button class="tab-btn" onclick="abrirAba(event, 'aba-atrasadas')">Em Atraso (<?php echo count($atrasadas); ?>)</button>
-            <button class="tab-btn" onclick="abrirAba(event, 'aba-realizadas')">Realizadas (<?php echo count($realizadas); ?>)</button>
+            <button type="button" class="tab-btn active" onclick="abrirAba(event, 'aba-futuras')">Por vir (<?php echo count($futuras); ?>)</button>
+            <button type="button" class="tab-btn" onclick="abrirAba(event, 'aba-atrasadas')">Em Atraso (<?php echo count($atrasadas); ?>)</button>
+            <button type="button" class="tab-btn" onclick="abrirAba(event, 'aba-realizadas')">Realizadas (<?php echo count($realizadas); ?>)</button>
         </div>
 
         <!-- Conteúdo das abas -->
@@ -95,7 +96,7 @@
                             <p><strong>Data:</strong> <?php echo date("d/m/Y", strtotime($c['Data_Consulta'])); ?></p>
                             <p><strong>Hora:</strong> <?php echo date("H:i", strtotime($c['Hora_Consulta'])); ?></p>
                             <span class="badge futura">Agendada</span>
-                            <a href="prontuario.php?id_consulta=<?php echo $c['Id_Consulta']; ?>" class="btn-acao">Ir para Prontuário</a>
+                            <a href="prontuario.php?id_consulta=<?php echo (int)$c['Id_Consulta']; ?>" class="btn-acao">Ir para Prontuário</a>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -115,7 +116,7 @@
                             <p><strong>Data:</strong> <?php echo date("d/m/Y", strtotime($c['Data_Consulta'])); ?></p>
                             <p><strong>Hora:</strong> <?php echo date("H:i", strtotime($c['Hora_Consulta'])); ?></p>
                             <span class="badge atrasada">Atrasada</span>
-                            <a href="prontuario.php?id_consulta=<?php echo $c['Id_Consulta']; ?>" class="btn-acao">Resolver Pendência</a>
+                            <a href="prontuario.php?id_consulta=<?php echo (int)$c['Id_Consulta']; ?>" class="btn-acao">Resolver Pendência</a>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -135,7 +136,7 @@
                             <p><strong>Data:</strong> <?php echo date("d/m/Y", strtotime($c['Data_Consulta'])); ?></p>
                             <p><strong>Hora:</strong> <?php echo date("H:i", strtotime($c['Hora_Consulta'])); ?></p>
                             <span class="badge realizada">Finalizada</span>
-                            <a href="prontuario.php?id_consulta=<?php echo $c['Id_Consulta']; ?>" class="btn-acao sec">Ver Prontuário</a>
+                            <a href="prontuario.php?id_consulta=<?php echo (int)$c['Id_Consulta']; ?>" class="btn-acao sec">Ver Prontuário</a>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -146,6 +147,10 @@
             <?php endif; ?>
         </div>
     </main>
+
+    <footer class="rodape-painel">
+        <p>© 2026 Acesso+ | Portal do Profissional</p>
+    </footer>
 
     <script>
         // Função simples para alternar as abas

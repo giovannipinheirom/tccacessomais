@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Acesso+</title>
     <link rel="stylesheet" href="css/loginProfissional.css">
+    <link rel="stylesheet" href="css/loginTema.css">
 </head>
 <body>
         <section class="containerPai">
@@ -76,7 +77,8 @@
                         <option value="prefiro-nao-informar">Prefiro não informar</option>
                     </select>
                     
-                    <input type="password" name="senha" id="senha" placeholder="Digite sua senha" aria-label="Digite sua senha" required>
+                    <input type="password" name="senha" id="senha" aria-describedby="dicaSenha" placeholder="Digite sua senha" aria-label="Digite sua senha" required>
+                    <p class="dica-senha" id="dicaSenha">Mínimo de 8 caracteres, com letra maiúscula, minúscula, número e símbolo (!@#$%^&amp;*.).</p>
                     <input type="password" id="conf_senha" placeholder="Confirme sua senha" aria-label="Confirme sua senha" required>
                     
                     <button type="submit">Cadastrar</button>

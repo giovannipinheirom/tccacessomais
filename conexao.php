@@ -135,6 +135,42 @@ function garantir_estrutura(Banco $con): void
     $con->query("CREATE UNIQUE INDEX IF NOT EXISTS idx_faturas_mensalidade ON Faturas (Id_User, Mes_Referencia) WHERE Descricao IS NULL");
 }
 
+/** Horários de atendimento da rede (consultas de 1 hora, pausa para o almoço às 12h). */
+const HORARIOS_EXPEDIENTE = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+/** Regras de senha do cadastro e da recuperação: retorna a lista do que falta (vazia = senha válida). */
+function problemas_senha(string $senha): array
+{
+    $faltando = [];
+    if (mb_strlen($senha) < 8) $faltando[] = 'ter pelo menos 8 caracteres';
+    if (!preg_match('/[A-Z]/', $senha)) $faltando[] = 'ter uma letra maiúscula';
+    if (!preg_match('/[a-z]/', $senha)) $faltando[] = 'ter uma letra minúscula';
+    if (!preg_match('/[0-9]/', $senha)) $faltando[] = 'ter um número';
+    if (!preg_match('/[^A-Za-z0-9]/', $senha)) $faltando[] = 'ter um símbolo (ex.: ! @ # $ . *)';
+    return $faltando;
+}
+
+/** Confere se a data (AAAA-MM-DD) existe, é dia útil e não está no passado. */
+function data_atendimento_valida(string $data): bool
+{
+    $d = DateTime::createFromFormat('!Y-m-d', $data);
+    if (!$d || $d->format('Y-m-d') !== $data) return false;
+    if ((int)$d->format('N') >= 6) return false; // sábado ou domingo
+    return $data >= date('Y-m-d');
+}
+
+/** Token contra envio de formulários por outros sites (CSRF). A sessão precisa estar iniciada. */
+function csrf_token(): string
+{
+    if (empty($_SESSION['csrf'])) $_SESSION['csrf'] = bin2hex(random_bytes(16));
+    return $_SESSION['csrf'];
+}
+
+function csrf_ok(): bool
+{
+    return !empty($_SESSION['csrf']) && hash_equals($_SESSION['csrf'], (string)($_POST['csrf'] ?? ''));
+}
+
 /** Endereço público do site (SITE_URL ou o endereço que o navegador usou). */
 function url_base_site(): string
 {

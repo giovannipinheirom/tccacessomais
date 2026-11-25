@@ -10,20 +10,73 @@
     $primeiroNome = explode(' ', trim($nomeCompleto))[0];
     include "conexao.php";
 
-	$IdProfissional = $_SESSION['id'] ?? 0;
-    
-    // Verifica se enviou o formulário de prontuário
+    $IdProfissional = (int)($_SESSION['id'] ?? 0);
+    $csrf = csrf_token();
+
+    // Salva o prontuário e finaliza a consulta (só consultas deste profissional que ainda não foram finalizadas)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_consulta'])) {
-        $idConsulta = $_POST['id_consulta'];
-        $observacoes = $_POST['observacoes'];
-        
-        // Atualiza a consulta para Realizada e salva as observações (Certifique-se de criar a coluna Observacoes_Medico na tabela Consultas)
-        $comandoAtualiza = "UPDATE Consultas SET Status_Consulta = 'Realizada', Observacoes_Medico = ? WHERE Id_Consulta = ? AND Id_Profissional = ?";
-        $con->query($comandoAtualiza, [$observacoes, (int)$idConsulta, (int)$IdProfissional]);
-        
-        echo "<script>alert('Prontuário salvo e consulta finalizada com sucesso!'); window.location.href='prontuario.php';</script>";
+        $idConsulta = (int)$_POST['id_consulta'];
+        $observacoes = trim((string)($_POST['observacoes'] ?? ''));
+        if (!csrf_ok() || mb_strlen($observacoes) < 5) {
+            header("location: prontuario.php?id_consulta=$idConsulta&msg=invalido");
+            exit();
+        }
+        $salvo = $con->query(
+            "UPDATE Consultas SET Status_Consulta = 'Realizada', Observacoes_Medico = ?
+             WHERE Id_Consulta = ? AND Id_Profissional = ? AND Id_User IS NOT NULL
+               AND Status_Consulta NOT IN ('Realizada', 'Cancelada', 'Cancelado')",
+            [mb_substr($observacoes, 0, 10000), $idConsulta, $IdProfissional]
+        );
+        header("location: prontuario.php?msg=" . (($salvo && $salvo->num_rows > 0) ? 'salvo' : 'erro'));
         exit();
     }
+
+    function cpf_formatado(string $cpf): string
+    {
+        $d = preg_replace('/\D/', '', $cpf);
+        return strlen($d) === 11 ? substr($d, 0, 3) . '.' . substr($d, 3, 3) . '.' . substr($d, 6, 3) . '-' . substr($d, 9, 2) : $cpf;
+    }
+
+    function idade(?string $nascimento): string
+    {
+        if (!$nascimento) return '';
+        return (new DateTime($nascimento))->diff(new DateTime('today'))->y . ' anos';
+    }
+
+    $msg = $_GET['msg'] ?? '';
+    $consulta = null;
+    if (isset($_GET['id_consulta'])) {
+        $r = $con->query(
+            "SELECT c.Id_Consulta, c.Data_Consulta, c.Hora_Consulta, c.Status_Consulta, c.Observacoes_Medico,
+                    u.Nome_User, u.CPF_User, u.Dta_Nasc_User, u.Num_Tel_User, p.Nome_Plano
+             FROM Consultas c
+             INNER JOIN Cadastro_Users u ON c.Id_User = u.Id_User
+             LEFT JOIN Planos p ON p.Id_Plano = u.Id_Plano
+             WHERE c.Id_Profissional = ? AND c.Id_Consulta = ?",
+            [$IdProfissional, (int)$_GET['id_consulta']]
+        );
+        $consulta = ($r && $r->num_rows > 0) ? $r->fetch_assoc() : false;
+    } else {
+        // Consultas que ainda precisam de prontuário (da mais antiga para a mais nova)
+        $pendentes = $con->query(
+            "SELECT c.Id_Consulta, c.Data_Consulta, c.Hora_Consulta, u.Nome_User
+             FROM Consultas c
+             INNER JOIN Cadastro_Users u ON c.Id_User = u.Id_User
+             WHERE c.Id_Profissional = ? AND c.Status_Consulta IN ('Pendente', 'Confirmado')
+             ORDER BY c.Data_Consulta ASC, c.Hora_Consulta ASC",
+            [$IdProfissional]
+        );
+        // Últimos prontuários finalizados
+        $finalizados = $con->query(
+            "SELECT c.Id_Consulta, c.Data_Consulta, c.Hora_Consulta, u.Nome_User
+             FROM Consultas c
+             INNER JOIN Cadastro_Users u ON c.Id_User = u.Id_User
+             WHERE c.Id_Profissional = ? AND c.Status_Consulta = 'Realizada'
+             ORDER BY c.Data_Consulta DESC, c.Hora_Consulta DESC LIMIT 6",
+            [$IdProfissional]
+        );
+    }
+    $agora = date('Y-m-d H:i:s');
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -31,96 +84,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso+ | Prontuários</title>
-    <link rel="stylesheet" href="css/areaUsuario.css">
+    <link rel="stylesheet" href="css/areaUsuario.css?v=3">
     <link rel="stylesheet" href="css/areaProfissional.css">
-    <link rel="stylesheet" href="css/prontuario.css">
+    <link rel="stylesheet" href="css/profissional.css">
 </head>
 <body>
     <?php include 'menuProfissional.php'; ?>
 
-    <main class="painel-profissional painel-prontuario">
-        <div class="prontuario-container">
-            <?php
-            if (isset($_GET['id_consulta'])) {
-                $idConsultaSelecionada = $_GET['id_consulta'];
-                // Busca a consulta selecionada (independente se está pendente ou realizada)
-                $query = "SELECT c.Id_Consulta, c.Data_Consulta, c.Hora_Consulta, c.Status_Consulta, c.Observacoes_Medico, u.Nome_User, u.CPF_User 
-                          FROM Consultas c 
-                          INNER JOIN Cadastro_Users u ON c.Id_User = u.Id_User 
-                          WHERE c.Id_Profissional = ? AND c.Id_Consulta = ?";
-                
-                $result = $con->query($query, [(int)$IdProfissional, (int)$idConsultaSelecionada]);
-                
-                if($result && $result->num_rows > 0) {
-                    $row = $result->fetch_assoc();
-                    $dataFormatada = date("d/m/Y", strtotime($row['Data_Consulta']));
-                    $horaFormatada = date("H:i", strtotime($row['Hora_Consulta']));
-                    $isRealizada = (strtolower($row['Status_Consulta']) == 'realizada');
-                    ?>
-                    <h2><?php echo $isRealizada ? 'Prontuário Finalizado' : 'Preencher Prontuário'; ?></h2>
-                    <p><a href="minhaAgenda.php" style="color: #007bff; text-decoration: none;">&larr; Voltar para a Agenda</a></p>
-                    
-                    <div style="border: 1px solid #eee; padding: 15px; margin-top: 15px; border-radius: 5px; background: <?php echo $isRealizada ? '#f8fafc' : '#fff'; ?>;">
-                        <h3>Paciente: <?php echo htmlspecialchars($row['Nome_User']); ?></h3>
-                        <p><strong>Data:</strong> <?php echo $dataFormatada; ?> às <?php echo $horaFormatada; ?> | <strong>CPF:</strong> <?php echo htmlspecialchars($row['CPF_User']); ?></p>
-                        
-                        <?php if ($isRealizada): ?>
-                            <div class="form-prontuario">
-                                <label>Anotações da Consulta (Prontuário):</label>
-                                <textarea readonly style="background-color: #e2e8f0; color: #475569; border-color: #cbd5e1;"><?php echo htmlspecialchars($row['Observacoes_Medico']); ?></textarea>
-                            </div>
-                        <?php else: ?>
-                            <form method="POST" action="prontuario.php" class="form-prontuario">
-                                <input type="hidden" name="id_consulta" value="<?php echo $row['Id_Consulta']; ?>">
-                                <label for="obs_<?php echo $row['Id_Consulta']; ?>">Anotações da Consulta (Prontuário):</label>
-                                <textarea id="obs_<?php echo $row['Id_Consulta']; ?>" name="observacoes" placeholder="Digite as observações, sintomas, receituário, etc..." required></textarea>
-                                <br>
-                                <button type="submit" class="btn-salvar">Salvar e Finalizar Consulta</button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                    <?php
-                } else {
-                    echo "<p>Consulta não encontrada.</p>";
-                    echo '<p><a href="minhaAgenda.php" style="color: #007bff; text-decoration: none;">&larr; Voltar</a></p>';
-                }
-            } else {
-                // Se não houver id_consulta na URL, lista todas as consultas pendentes
-            ?>
-                <h2>Consultas Pendentes</h2>
-                <p>Selecione uma consulta para preencher as anotações e marcá-la como realizada.</p>
-                
-                <?php
-                $query = "SELECT c.Id_Consulta, c.Data_Consulta, c.Hora_Consulta, u.Nome_User, u.CPF_User 
-                          FROM Consultas c 
-                          INNER JOIN Cadastro_Users u ON c.Id_User = u.Id_User 
-                          WHERE c.Id_Profissional = ? AND c.Status_Consulta = 'Pendente'
-                          ORDER BY c.Data_Consulta ASC";
-                
-                $result = $con->query($query, [(int)$IdProfissional]);
-                
-                if($result && $result->num_rows > 0) {
-                    echo '<div class="cards-container">';
-                    while($row = $result->fetch_assoc()) {
-                        $dataFormatada = date("d/m/Y", strtotime($row['Data_Consulta']));
-                        $horaFormatada = date("H:i", strtotime($row['Hora_Consulta']));
-                        
-                        echo '<div class="card-paciente">';
-                        echo '<div>';
-                        echo '<h3>' . htmlspecialchars($row['Nome_User']) . '</h3>';
-                        echo '<p><strong>Data:</strong> ' . $dataFormatada . '</p>';
-                        echo '<p><strong>Hora:</strong> ' . $horaFormatada . '</p>';
-                        echo '</div>';
-                        echo '<a href="prontuario.php?id_consulta=' . $row['Id_Consulta'] . '" class="btn-atender">Atender</a>';
-                        echo '</div>';
-                    }
-                    echo '</div>';
-                } else {
-                    echo "<p>Nenhuma consulta pendente de prontuário.</p>";
-                }
-            }
-            ?>
+    <header class="area-header">
+        <div class="header-content">
+            <span class="eyebrow">Prontuários</span>
+            <h1><?php echo $consulta ? 'Atendimento' : 'Prontuários eletrônicos'; ?></h1>
+            <p><?php echo $consulta ? 'Registre as anotações da consulta e finalize o atendimento.' : 'Selecione uma consulta para registrar o atendimento ou rever um prontuário.'; ?></p>
         </div>
+    </header>
+
+    <main class="conteudo-prof">
+        <?php if ($msg === 'salvo'): ?>
+            <div class="alerta-plano sucesso" role="status">Prontuário salvo e consulta finalizada com sucesso!</div>
+        <?php elseif ($msg === 'erro'): ?>
+            <div class="alerta-plano erro" role="alert">Não foi possível salvar: a consulta não existe ou já foi finalizada.</div>
+        <?php elseif ($msg === 'invalido'): ?>
+            <div class="alerta-plano erro" role="alert">Escreva as anotações da consulta (pelo menos 5 caracteres) antes de finalizar.</div>
+        <?php endif; ?>
+
+        <?php if ($consulta === false): ?>
+            <section class="caixa-prof">
+                <h2>Consulta não encontrada</h2>
+                <p class="texto-suave">Esta consulta não existe ou pertence a outro profissional.</p>
+                <a href="prontuario.php" class="link-voltar-prof">&larr; Voltar para os prontuários</a>
+            </section>
+
+        <?php elseif ($consulta):
+            $isRealizada = strtolower($consulta['Status_Consulta']) === 'realizada';
+            $isCancelada = in_array(strtolower($consulta['Status_Consulta']), ['cancelada', 'cancelado'], true);
+        ?>
+            <a href="minhaAgenda.php" class="link-voltar-prof">&larr; Voltar para a agenda</a>
+            <div class="prontuario-grid">
+                <aside class="ficha-paciente">
+                    <span class="ficha-rotulo">Paciente</span>
+                    <h2><?php echo htmlspecialchars($consulta['Nome_User']); ?></h2>
+                    <dl>
+                        <div><dt>CPF</dt><dd><?php echo htmlspecialchars(cpf_formatado((string)$consulta['CPF_User'])); ?></dd></div>
+                        <div><dt>Idade</dt><dd><?php echo htmlspecialchars(idade($consulta['Dta_Nasc_User'])); ?></dd></div>
+                        <div><dt>Telefone</dt><dd><?php echo htmlspecialchars((string)$consulta['Num_Tel_User']); ?></dd></div>
+                        <div><dt>Plano</dt><dd><?php echo htmlspecialchars($consulta['Nome_Plano'] ?? '—'); ?></dd></div>
+                        <div><dt>Consulta</dt><dd><?php echo date("d/m/Y", strtotime($consulta['Data_Consulta'])); ?> às <?php echo date("H:i", strtotime($consulta['Hora_Consulta'])); ?></dd></div>
+                    </dl>
+                    <span class="status <?php echo $isRealizada ? 'realizada' : ($isCancelada ? 'cancelada' : 'pendente'); ?>"><?php echo htmlspecialchars($consulta['Status_Consulta']); ?></span>
+                </aside>
+
+                <section class="caixa-prof">
+                    <?php if ($isRealizada): ?>
+                        <h2>Anotações do atendimento</h2>
+                        <div class="anotacoes-salvas"><?php echo nl2br(htmlspecialchars((string)$consulta['Observacoes_Medico'])); ?></div>
+                    <?php elseif ($isCancelada): ?>
+                        <h2>Consulta cancelada</h2>
+                        <p class="texto-suave">O paciente cancelou esta consulta. Não há prontuário a registrar.</p>
+                    <?php else: ?>
+                        <h2>Registrar atendimento</h2>
+                        <form method="POST" action="prontuario.php" class="form-prontuario">
+                            <input type="hidden" name="csrf" value="<?php echo $csrf; ?>">
+                            <input type="hidden" name="id_consulta" value="<?php echo (int)$consulta['Id_Consulta']; ?>">
+                            <label for="observacoes">Anotações da consulta</label>
+                            <textarea id="observacoes" name="observacoes" required minlength="5" maxlength="10000"
+                                      placeholder="Queixa principal, avaliação, conduta, prescrições e orientações..."></textarea>
+                            <p class="texto-suave">Ao salvar, a consulta é marcada como <strong>realizada</strong> e as anotações não podem mais ser alteradas.</p>
+                            <button type="submit" class="btn-prof" onclick="return confirm('Salvar o prontuário e finalizar a consulta?');">Salvar e finalizar consulta</button>
+                        </form>
+                    <?php endif; ?>
+                </section>
+            </div>
+
+        <?php else: ?>
+            <section class="caixa-prof">
+                <h2>Aguardando prontuário</h2>
+                <?php if ($pendentes && $pendentes->num_rows > 0): ?>
+                    <div class="lista-prof">
+                        <?php while ($row = $pendentes->fetch_assoc()):
+                            $atrasada = ($row['Data_Consulta'] . ' ' . $row['Hora_Consulta']) < $agora; ?>
+                            <a href="prontuario.php?id_consulta=<?php echo (int)$row['Id_Consulta']; ?>" class="item-prof">
+                                <span class="item-data"><strong><?php echo date("d/m", strtotime($row['Data_Consulta'])); ?></strong><?php echo date("H:i", strtotime($row['Hora_Consulta'])); ?></span>
+                                <span class="item-nome"><?php echo htmlspecialchars($row['Nome_User']); ?></span>
+                                <span class="status <?php echo $atrasada ? 'atrasada' : 'pendente'; ?>"><?php echo $atrasada ? 'Em atraso' : 'Agendada'; ?></span>
+                                <span class="item-acao">Atender &rarr;</span>
+                            </a>
+                        <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="lista-vazia">Nenhuma consulta aguardando prontuário.</p>
+                <?php endif; ?>
+            </section>
+
+            <section class="caixa-prof">
+                <h2>Finalizados recentemente</h2>
+                <?php if ($finalizados && $finalizados->num_rows > 0): ?>
+                    <div class="lista-prof">
+                        <?php while ($row = $finalizados->fetch_assoc()): ?>
+                            <a href="prontuario.php?id_consulta=<?php echo (int)$row['Id_Consulta']; ?>" class="item-prof">
+                                <span class="item-data"><strong><?php echo date("d/m", strtotime($row['Data_Consulta'])); ?></strong><?php echo date("H:i", strtotime($row['Hora_Consulta'])); ?></span>
+                                <span class="item-nome"><?php echo htmlspecialchars($row['Nome_User']); ?></span>
+                                <span class="status realizada">Realizada</span>
+                                <span class="item-acao">Ver &rarr;</span>
+                            </a>
+                        <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <p class="lista-vazia">Nenhum prontuário finalizado ainda.</p>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
     </main>
+
+    <footer class="rodape-painel">
+        <p>© 2026 Acesso+ | Portal do Profissional</p>
+    </footer>
 </body>
 </html>

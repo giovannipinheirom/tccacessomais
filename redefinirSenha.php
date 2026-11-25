@@ -34,18 +34,6 @@ function email_mascarado(string $email): string
     return mb_substr($nome, 0, 2) . str_repeat('•', max(3, mb_strlen($nome) - 2)) . '@' . $dominio;
 }
 
-/** Mesmas regras de senha do cadastro (js/loginUser.js). Retorna a lista do que falta. */
-function problemas_senha(string $senha): array
-{
-    $faltando = [];
-    if (mb_strlen($senha) < 8) $faltando[] = 'ter pelo menos 8 caracteres';
-    if (!preg_match('/[A-Z]/', $senha)) $faltando[] = 'ter uma letra maiúscula';
-    if (!preg_match('/[a-z]/', $senha)) $faltando[] = 'ter uma letra minúscula';
-    if (!preg_match('/[0-9]/', $senha)) $faltando[] = 'ter um número';
-    if (!preg_match('/[^A-Za-z0-9]/', $senha)) $faltando[] = 'ter um símbolo (ex.: ! @ # $ . *)';
-    return $faltando;
-}
-
 $token = (string)($_POST['token'] ?? $_GET['token'] ?? '');
 $conta = conta_do_token($con, $contas, $token);
 $estado = $conta ? 'formulario' : 'invalido';

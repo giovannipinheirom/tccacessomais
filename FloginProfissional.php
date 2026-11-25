@@ -8,9 +8,11 @@
         $CPF = $_POST['CPF'];
         $senha = $_POST['senha'];
 
-        $comando = "SELECT * FROM Cadastro_Profissionais WHERE CPF_Profissional = ?";
+        // Aceita o CPF com ou sem pontuação
+        $cpfDigitos = preg_replace('/\D/', '', $CPF);
+        $comando = "SELECT * FROM Cadastro_Profissionais WHERE CPF_Profissional = ? OR REPLACE(REPLACE(CPF_Profissional, '.', ''), '-', '') = ? LIMIT 1";
 
-        $resultado = $con->query($comando, [$CPF]);
+        $resultado = $con->query($comando, [$CPF, $cpfDigitos]);
         $usuario = $resultado ? $resultado->fetch_assoc() : null;
 
         // A senha é conferida pelo hash (password_verify), nunca comparada em texto puro no SQL
@@ -21,7 +23,7 @@
                 unset($_SESSION['nome']);
                 unset($_SESSION['tipo_conta']);
                 echo "<script>
-                    alert('Usuário não encontrado!');
+                    alert('CPF ou senha incorretos. Confira os dados e tente novamente.');
                     window.location.href = 'loginProfissional.html';
                     </script>";
                     exit();

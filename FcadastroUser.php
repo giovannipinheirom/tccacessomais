@@ -2,16 +2,24 @@
 session_start();
 include "conexao.php";  
 
-$nome =$_POST['nome'];
-$email =$_POST['email'];
-$telefone =$_POST['telefone'];
-$CPF =$_POST['CPF'];
-$CEP = preg_replace('/\D/', '', $_POST['CEP']); // só números (evita URL inválida nas APIs de CEP)
-$data_nasc =$_POST['data_nasc'];
-$genero =$_POST['genero'];
-$est_civil =$_POST['est_civil'];
-$senha =$_POST['senha'];
+$nome =trim((string)($_POST['nome'] ?? ''));
+$email =trim((string)($_POST['email'] ?? ''));
+$telefone =trim((string)($_POST['telefone'] ?? ''));
+$CPF =trim((string)($_POST['CPF'] ?? ''));
+$CEP = preg_replace('/\D/', '', (string)($_POST['CEP'] ?? '')); // só números (evita URL inválida nas APIs de CEP)
+$data_nasc =trim((string)($_POST['data_nasc'] ?? ''));
+$genero =trim((string)($_POST['genero'] ?? ''));
+$est_civil =trim((string)($_POST['est_civil'] ?? ''));
+$senha = (string)($_POST['senha'] ?? '');
 // A senha é gravada criptografada (password_hash) no momento do INSERT
+
+// Confere os dados obrigatórios e as regras de senha também no servidor
+$faltandoSenha = problemas_senha((string)$senha);
+if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
+    $motivo = $faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.';
+    echo "<script>alert(" . json_encode($motivo, JSON_UNESCAPED_UNICODE) . "); window.history.back();</script>";
+    exit();
+}
 
 // Verifica se o CPF ou E-mail já estão cadastrados
 $comandoVerifica = "SELECT * FROM Cadastro_Users WHERE CPF_User = ? OR REPLACE(REPLACE(CPF_User, '.', ''), '-', '') = ? OR Email_User = ?";
@@ -36,7 +44,7 @@ $longitude = "";
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $urlDaApi);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_TIMEOUT, 8);
 curl_setopt($ch, CURLOPT_USERAGENT, "SistemaMedicoTCC/1.0"); // A API exige identificação
 $resposta = curl_exec($ch);
 curl_close($ch);
@@ -61,7 +69,7 @@ $urlViaCEP = "https://viacep.com.br/ws/{$CEP}/json/";
 $chCep = curl_init();
 curl_setopt($chCep, CURLOPT_URL, $urlViaCEP);
 curl_setopt($chCep, CURLOPT_RETURNTRANSFER, 1);
-curl_setopt($chCep, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($chCep, CURLOPT_TIMEOUT, 8);
 $respostaCep = curl_exec($chCep);
 curl_close($chCep);
 

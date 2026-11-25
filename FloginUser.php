@@ -22,7 +22,7 @@
                 unset($_SESSION['senha']);
                 unset($_SESSION['nome']);
                 echo "<script>
-                    alert('Usuário não encontrado!');
+                    alert('CPF ou senha incorretos. Confira os dados e tente novamente.');
                     window.location.href = 'loginUser.html';
                     </script>";
                     exit();

@@ -3,53 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso+</title>
+    <title>Acesso+ | Convênio médico para pessoas com deficiência</title>
     <link rel="stylesheet" href="css/edit.css">
+    <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="css/menu.css">
+    <meta name="description" content="Acesso+: convênio médico pensado para pessoas com deficiência, com rede credenciada acessível, agendamento online e carteirinha digital.">
 </head>
 <body>
-    <nav>
+    <nav class="nav-site">
         <div class="img-logo">
-            <img src="img/logo.png" alt="Logo Acesso+" class="logo-img">
+            <a href="index.html"><img src="img/logo.png" alt="Acesso+ — página inicial" class="logo-img"></a>
         </div>
-
-        <div class="links-nav">
-            <a href="index.html" class="link-ativo">Início</a>
-            <a href="planos.html">Planos</a>
-            <a href="#beneficios">Benefícios</a>
-            <a href="contato.php">Contato</a>
+        <button type="button" class="btn-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-principal"><svg class="icone-abrir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="icone-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div class="menu-principal" id="menu-principal">
+            <div class="links-nav">
+                <a href="index.html" class="link-ativo" aria-current="page">Início</a>
+                <a href="planos.html">Planos</a>
+                <a href="index.html#beneficios">Benefícios</a>
+                <a href="sobre.php">Sobre</a>
+                <a href="contato.php">Contato</a>
+            </div>
+            <a href="escolhaLogin.html" class="btn-nav">Entrar</a>
         </div>
-
-        <button class="btn-nav" onclick="irParaLogin()">Entrar</button>
     </nav>
 
-    <header>
+    <header class="hero">
         <div class="header-content">
-            <img src="img/logo.png" alt="Logo Acesso+" class="hero-logo">
-            <h1 class="hero-title">O Convênio Médico Exclusivo para <span class="highlight">Pessoas com Deficiência</span></h1>
+            <img src="img/logo.png" alt="" class="hero-logo">
+            <span class="hero-selo">Feito para pessoas com deficiência</span>
+            <h1 class="hero-title">O convênio médico exclusivo para <span class="highlight">pessoas com deficiência</span></h1>
             <p>Mais inclusão, autonomia e uma rede credenciada especializada pronta para cuidar da sua saúde.</p>
-            <a href="planos.html" class="btn-planos">Conheça nossos planos</a>
+            <div class="hero-acoes">
+                <a href="planos.html" class="btn-planos">Conheça nossos planos</a>
+                <a href="loginUser.html" class="btn-secundario-site">Já sou beneficiário</a>
+            </div>
         </div>
         <div class="img-header">
-            <img src="img/pessoas_home_nova_foto.jpg" alt="Foto realista de pacientes com deficiência interagindo com uma médica">
+            <img src="img/pessoas_home_nova_foto.jpg" alt="Pacientes com deficiência conversando com uma médica em uma clínica acessível">
         </div>
     </header>
 
     <div class="quick-access-container">
         <div class="quick-access">
             <a href="redeCredenciada.php" class="qa-item">
-                <img src="img/hospital.png" alt="Hospital">
+                <img src="img/hospital.png" alt="">
                 <span>Rede Credenciada</span>
             </a>
             <a href="agendamentos.php" class="qa-item">
-                <img src="img/medico.png" alt="Médico">
+                <img src="img/medico.png" alt="">
                 <span>Buscar Médico</span>
             </a>
             <a href="areaUsuario.php" class="qa-item">
-                <img src="img/pcd.png" alt="Carteirinha">
+                <img src="img/pcd.png" alt="">
                 <span>Carteirinha Digital</span>
             </a>
             <a href="loginProfissional.html" class="qa-item">
-                <img src="img/cuidados-de-saude.png" alt="Profissional">
+                <img src="img/cuidados-de-saude.png" alt="">
                 <span>Área do Profissional</span>
             </a>
         </div>
@@ -94,42 +103,60 @@
         </div>
     </main>
 
+    <section class="como-funciona" aria-labelledby="titulo-como-funciona">
+        <h2 id="titulo-como-funciona">Como funciona</h2>
+        <p>Do cadastro à consulta em poucos passos, pelo site ou pelo aplicativo.</p>
+        <ol class="passos">
+            <li><h3>Escolha seu plano</h3><p>Compare Essencial, Plus e Premium e escolha o cuidado ideal para você.</p></li>
+            <li><h3>Cadastre-se e pague online</h3><p>Faça o cadastro e pague a mensalidade com segurança pelo Mercado Pago (cartão, PIX ou boleto).</p></li>
+            <li><h3>Agende suas consultas</h3><p>Encontre profissionais na rede acessível e marque o horário que for melhor para você.</p></li>
+        </ol>
+    </section>
+
+    <section class="chamada-final">
+        <div>
+            <div>
+                <h2>Pronto para cuidar da sua saúde?</h2>
+                <p>Escolha um plano e comece hoje mesmo.</p>
+            </div>
+            <a href="planos.html">Ver planos</a>
+        </div>
+    </section>
+
     <footer id="contato">
         <div class="footer-content">
             <div class="footer-block">
-                <img src="img/logo.png" alt="Logo Acesso+" class="img-logo-footer">
-                <p>Convênio médico voltado para pessoas com deficiência</p>
+                <img src="img/logo.png" alt="Acesso+" class="img-logo-footer">
+                <p>Convênio médico pensado para pessoas com deficiência, com rede acessível e atendimento humanizado.</p>
             </div>
 
             <div class="footer-block">
                 <h4>Institucional</h4>
-                <a href="sobre.php">Sobre Nós</a>
-                <br>
+                <a href="sobre.php">Sobre nós</a>
                 <a href="planos.html">Planos</a>
-                <br>
-                <a href="contato.php">Fale Conosco</a>
+                <a href="contato.php">Fale conosco</a>
             </div>
 
             <div class="footer-block">
                 <h4>Ajuda</h4>
-                <a href="escolhaLogin.html">Área de Acesso</a>
-                <br>
-                <a href="privacidade.php">Política de Privacidade</a>
-                <br>
-                <a href="termos.php">Termos de Uso</a>
+                <a href="escolhaLogin.html">Área de acesso</a>
+                <a href="privacidade.php">Política de privacidade</a>
+                <a href="termos.php">Termos de uso</a>
             </div>
 
             <div class="footer-siga">
                 <h4>Siga-nos</h4>
                 <div class="social-icons">
-                    <a href="https://www.instagram.com/acessomais.oficiall/" target="_blank" rel="noopener noreferrer"><img src="img/instagram.png" alt="Instagram" class="footer-img-siganos"></a>
-                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer"><img src="img/facebook.png" alt="Facebook" class="footer-img-siganos"></a>
-                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer"><img src="img/linkedin.png" alt="LinkedIn" class="footer-img-siganos"></a>
+                    <a href="https://www.instagram.com/acessomais.oficiall/" target="_blank" rel="noopener noreferrer" aria-label="Instagram do Acesso+"><img src="img/instagram.png" alt="" class="footer-img-siganos"></a>
+                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><img src="img/facebook.png" alt="" class="footer-img-siganos"></a>
+                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><img src="img/linkedin.png" alt="" class="footer-img-siganos"></a>
                 </div>
             </div>
         </div>
+        <p class="footer-copy">© 2026 Acesso+ — Trabalho de Conclusão de Curso, Etec Lauro Gomes.</p>
     </footer>
 
     <script src="js/index.js"></script>
+    <script src="js/menu.js"></script>
 </body>
 </html>

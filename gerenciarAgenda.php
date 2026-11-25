@@ -11,56 +11,88 @@
 
     $IdProfissional = $_SESSION['id'] ?? 0;
 
+    $csrf = csrf_token();
+
     // ----- LÓGICA DE PROCESSAMENTO DO FORMULÁRIO -----
+    // Os bloqueios são gravados como "consultas" sem paciente (Id_User = NULL) e status Bloqueado.
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $acao = $_POST['acao'] ?? '';
+        $aviso = 'erro';
 
-        if ($acao == 'bloquear_horario') {
-            $data = $_POST['data_bloqueio'];
-            $hora = $_POST['hora_bloqueio'];
-            
-            // Insere uma consulta falsa (Id_User = NULL) com status Bloqueado
-            // NOTA: Para isso funcionar, o banco de dados deve permitir Id_User = NULL.
-            $sql = "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta, Observacoes_Medico) 
-                    VALUES (NULL, ?, ?, ?, 'Bloqueado', 'Bloqueio manual de agenda')";
-            $con->query($sql, [(int)$IdProfissional, $data, $hora]);
-            
-            echo "<script>alert('Horário bloqueado com sucesso!'); window.location.href='gerenciarAgenda.php';</script>";
-            exit();
-
-        } elseif ($acao == 'bloquear_dia') {
-            $dataDia = $_POST['data_dia'];
-            $horariosExpediente = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
-            
-            // Cria um bloqueio para cada hora do dia
-            foreach($horariosExpediente as $h) {
-                // Checa se já existe consulta nesse horário
-                $check = "SELECT Id_Consulta FROM Consultas WHERE Id_Profissional = ? AND Data_Consulta = ? AND Hora_Consulta = ?";
-                $resCheck = $con->query($check, [(int)$IdProfissional, $dataDia, "$h:00"]);
-                if($resCheck && $resCheck->num_rows == 0) {
-                    // Só bloqueia se estiver vazio (não cancela consultas de pacientes já marcados)
-                    $sql = "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta, Observacoes_Medico) 
-                            VALUES (NULL, ?, ?, ?, 'Bloqueado', 'Férias / Dia Inteiro')";
-                    $con->query($sql, [(int)$IdProfissional, $dataDia, "$h:00"]);
+        if (!csrf_ok()) {
+            $aviso = 'erro';
+        } elseif ($acao == 'bloquear_horario') {
+            $data = (string)($_POST['data_bloqueio'] ?? '');
+            $hora = (string)($_POST['hora_bloqueio'] ?? '');
+            if (!data_atendimento_valida($data) || !in_array($hora, HORARIOS_EXPEDIENTE, true)) {
+                $aviso = 'invalido';
+            } else {
+                // Não bloqueia por cima de uma consulta já marcada (nem duplica um bloqueio)
+                $ocupado = $con->query(
+                    "SELECT 1 FROM Consultas WHERE Id_Profissional = ? AND Data_Consulta = ? AND Hora_Consulta = ?
+                     AND Status_Consulta NOT IN ('Cancelado', 'Cancelada')",
+                    [(int)$IdProfissional, $data, "$hora:00"]
+                );
+                if ($ocupado && $ocupado->num_rows > 0) {
+                    $aviso = 'ocupado';
+                } else {
+                    $con->query(
+                        "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta, Observacoes_Medico)
+                         VALUES (NULL, ?, ?, ?, 'Bloqueado', 'Bloqueio manual de agenda')",
+                        [(int)$IdProfissional, $data, "$hora:00"]
+                    );
+                    $aviso = 'horario';
                 }
             }
-            echo "<script>alert('Dia bloqueado com sucesso! (Horários já agendados por pacientes foram mantidos)'); window.location.href='gerenciarAgenda.php';</script>";
-            exit();
+
+        } elseif ($acao == 'bloquear_dia') {
+            $dataDia = (string)($_POST['data_dia'] ?? '');
+            if (!data_atendimento_valida($dataDia)) {
+                $aviso = 'invalido';
+            } else {
+                foreach (HORARIOS_EXPEDIENTE as $h) {
+                    // Só bloqueia horários vazios (não cancela consultas de pacientes já marcados)
+                    $resCheck = $con->query(
+                        "SELECT 1 FROM Consultas WHERE Id_Profissional = ? AND Data_Consulta = ? AND Hora_Consulta = ?
+                         AND Status_Consulta NOT IN ('Cancelado', 'Cancelada')",
+                        [(int)$IdProfissional, $dataDia, "$h:00"]
+                    );
+                    if ($resCheck && $resCheck->num_rows == 0) {
+                        $con->query(
+                            "INSERT INTO Consultas (Id_User, Id_Profissional, Data_Consulta, Hora_Consulta, Status_Consulta, Observacoes_Medico)
+                             VALUES (NULL, ?, ?, ?, 'Bloqueado', 'Férias / Dia inteiro')",
+                            [(int)$IdProfissional, $dataDia, "$h:00"]
+                        );
+                    }
+                }
+                $aviso = 'dia';
+            }
 
         } elseif ($acao == 'desbloquear') {
-            $idConsulta = $_POST['id_bloqueio'];
-            // Deleta a "consulta falsa"
-            $sql = "DELETE FROM Consultas WHERE Id_Consulta = ? AND Id_Profissional = ? AND Status_Consulta = 'Bloqueado'";
-            $con->query($sql, [(int)$idConsulta, (int)$IdProfissional]);
-            echo "<script>alert('Horário liberado!'); window.location.href='gerenciarAgenda.php';</script>";
-            exit();
+            $con->query(
+                "DELETE FROM Consultas WHERE Id_Consulta = ? AND Id_Profissional = ? AND Status_Consulta = 'Bloqueado'",
+                [(int)($_POST['id_bloqueio'] ?? 0), (int)$IdProfissional]
+            );
+            $aviso = 'liberado';
         }
+        header("location: gerenciarAgenda.php?msg=$aviso");
+        exit();
     }
+
+    $mensagens = [
+        'horario'  => ['sucesso', 'Horário bloqueado com sucesso.'],
+        'dia'      => ['sucesso', 'Dia bloqueado. Consultas que os pacientes já tinham marcado foram mantidas.'],
+        'liberado' => ['sucesso', 'Horário liberado para agendamento.'],
+        'ocupado'  => ['erro', 'Esse horário já tem uma consulta marcada ou já está bloqueado.'],
+        'invalido' => ['erro', 'Escolha um dia útil a partir de hoje e um dos horários da lista.'],
+        'erro'     => ['erro', 'Não foi possível concluir. Atualize a página e tente novamente.'],
+    ];
+    $msg = $mensagens[$_GET['msg'] ?? ''] ?? null;
 
     // ----- BUSCA OS BLOQUEIOS ATUAIS PARA MOSTRAR NA TELA -----
     $queryBloqueios = "SELECT Id_Consulta, Data_Consulta, Hora_Consulta, Observacoes_Medico 
                        FROM Consultas 
-                       WHERE Id_Profissional = ? AND Status_Consulta = 'Bloqueado'
+                       WHERE Id_Profissional = ? AND Status_Consulta = 'Bloqueado' AND Data_Consulta >= CURRENT_DATE
                        ORDER BY Data_Consulta ASC, Hora_Consulta ASC";
     $resultBloqueios = $con->query($queryBloqueios, [(int)$IdProfissional]);
 ?>
@@ -74,8 +106,9 @@
     <link rel="stylesheet" href="css/areaUsuario.css">
     <link rel="stylesheet" href="css/areaProfissional.css">
     <link rel="stylesheet" href="css/gerenciarAgenda.css">
+    <link rel="stylesheet" href="css/profissional.css">
     <!-- Usando o Flatpickr para os calendários -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 </head>
 <body>
     <?php include 'menuProfissional.php'; ?>
@@ -88,6 +121,10 @@
         </div>
     </header>
 
+    <?php if ($msg): ?>
+        <div class="alerta-plano <?php echo $msg[0]; ?>" role="<?php echo $msg[0] === 'erro' ? 'alert' : 'status'; ?>" style="margin: 24px auto 0; width: calc(100% - 48px);"><?php echo $msg[1]; ?></div>
+    <?php endif; ?>
+
     <main class="gerenciar-container">
         <!-- Lado Esquerdo: Formulários -->
         <div class="coluna-forms">
@@ -96,13 +133,14 @@
                 <h3>Bloquear Horário Específico</h3>
                 <form method="POST">
                     <input type="hidden" name="acao" value="bloquear_horario">
+                    <input type="hidden" name="csrf" value="<?php echo $csrf; ?>">
                     <div class="form-group">
-                        <label>Data</label>
-                        <input type="text" class="calendario" name="data_bloqueio" required placeholder="Selecione o dia">
+                        <label for="data_bloqueio">Data</label>
+                        <input type="text" class="calendario" id="data_bloqueio" name="data_bloqueio" required placeholder="Selecione o dia" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label>Horário</label>
-                        <select name="hora_bloqueio" required>
+                        <label for="hora_bloqueio">Horário</label>
+                        <select id="hora_bloqueio" name="hora_bloqueio" required>
                             <option value="" disabled selected hidden>Selecione a hora</option>
                             <option value="08:00">08:00</option><option value="09:00">09:00</option>
                             <option value="10:00">10:00</option><option value="11:00">11:00</option>
@@ -118,9 +156,10 @@
                 <h3>Bloquear Dia Inteiro (Férias)</h3>
                 <form method="POST">
                     <input type="hidden" name="acao" value="bloquear_dia">
+                    <input type="hidden" name="csrf" value="<?php echo $csrf; ?>">
                     <div class="form-group">
-                        <label>Data para bloquear</label>
-                        <input type="text" class="calendario" name="data_dia" required placeholder="Selecione o dia">
+                        <label for="data_dia">Data para bloquear</label>
+                        <input type="text" class="calendario" id="data_dia" name="data_dia" required placeholder="Selecione o dia" autocomplete="off">
                     </div>
                     <p class="aviso-bloqueio">Ao bloquear um dia inteiro, todos os horários livres desse dia sumirão para os pacientes. Pacientes que já agendaram antes do bloqueio serão mantidos.</p>
                     <button type="submit" class="btn-bloquear btn-bloquear-dia">Bloquear Dia Completo</button>
@@ -143,7 +182,8 @@
                             </div>
                             <form method="POST" class="form-remover">
                                 <input type="hidden" name="acao" value="desbloquear">
-                                <input type="hidden" name="id_bloqueio" value="<?php echo $b['Id_Consulta']; ?>">
+                                <input type="hidden" name="csrf" value="<?php echo $csrf; ?>">
+                                <input type="hidden" name="id_bloqueio" value="<?php echo (int)$b['Id_Consulta']; ?>">
                                 <button type="submit" class="btn-remover">Liberar</button>
                             </form>
                         </div>
@@ -155,8 +195,12 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    <footer class="rodape-painel">
+        <p>© 2026 Acesso+ | Portal do Profissional</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
     <script>
         // Ativa o calendário nos campos
         flatpickr(".calendario", {

@@ -76,6 +76,7 @@ $csrf = $_SESSION['csrf_admin'] ?? '';
     <title>Administrador | Acesso+</title>
     <link rel="stylesheet" href="css/edit.css">
     <link rel="stylesheet" href="css/paginas.css">
+    <link rel="stylesheet" href="css/site.css">
     <style>
         .abas { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0; }
         .abas a { padding: 8px 16px; border-radius: 999px; background: #eef2ff; color: #0f259e; text-decoration: none; font-weight: 600; }
@@ -96,7 +97,7 @@ $csrf = $_SESSION['csrf_admin'] ?? '';
     </style>
 </head>
 <body>
-    <nav>
+    <nav class="nav-admin">
         <div class="img-logo"><a href="index.html"><img src="img/logo.png" alt="Logo Acesso+ — voltar ao início" class="logo-img"></a></div>
         <div class="links-nav"><a href="admin.php" class="link-ativo">Painel do Administrador</a></div>
         <?php if ($logado): ?><a class="btn-nav" href="admin.php?sair=1" style="text-decoration:none">Sair</a><?php endif; ?>
@@ -184,7 +185,7 @@ $csrf = $_SESSION['csrf_admin'] ?? '';
         <?php elseif ($aba === 'planos'):
             $planos = linhas($con->query("SELECT Id_Plano, Nome_Plano, Preco FROM Planos ORDER BY Id_Plano"));
         ?>
-            <table class="lista">
+            <div class="tabela-rolagem"><table class="lista">
                 <tr><th>Plano</th><th>Preço mensal (R$)</th></tr>
                 <?php foreach ($planos as $p): ?>
                 <tr><td><?php echo h($p['Nome_Plano']); ?></td>
@@ -195,7 +196,7 @@ $csrf = $_SESSION['csrf_admin'] ?? '';
                         <button class="btn-peq">Salvar</button>
                     </form></td></tr>
                 <?php endforeach; ?>
-            </table>
+            </table></div>
 
         <?php elseif ($aba === 'mensagens'):
             $msgs = linhas($con->query("SELECT * FROM Mensagens_Contato ORDER BY Lida ASC, Data_Envio DESC"));

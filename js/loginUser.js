@@ -28,7 +28,7 @@ formCadastro.addEventListener('submit' , function(event){
             !/[A-Z]/.test(senha) ||
             !/[a-z]/.test(senha) ||
             !/[0-9]/.test(senha) ||
-            !/[!@#$%^&*.]/.test(senha);
+            !/[^A-Za-z0-9]/.test(senha);
 
     if(senhaInvalida) {
         event.preventDefault();

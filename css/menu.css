@@ -1,0 +1,116 @@
+/*
+ * Menu superior responsivo (site público, área do paciente, área do profissional e admin).
+ * Carregue DEPOIS do CSS da página. No computador o menu fica igual; no celular os links
+ * ficam dentro do botão ☰ (js/menu.js abre e fecha).
+ */
+
+nav { gap: 24px; }
+
+/* No computador o agrupador não interfere no layout (os filhos continuam no flex do <nav>) */
+.menu-principal { display: contents; }
+
+.img-logo a { display: block; }
+
+.links-nav a, .nav-nome, .btn-logout, .btn-acessibilidade, .btn-nav { white-space: nowrap; }
+.nav-app .acessibilidade-botoes { gap: 6px; }
+.nav-app .nav-usuario { gap: 12px; }
+
+.btn-menu {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #0f172a;
+    cursor: pointer;
+}
+
+.btn-menu svg { width: 22px; height: 22px; }
+.btn-menu .icone-fechar { display: none; }
+nav.menu-aberto .btn-menu .icone-abrir { display: none; }
+nav.menu-aberto .btn-menu .icone-fechar { display: block; }
+
+.links-nav a:focus-visible,
+.btn-menu:focus-visible,
+.btn-nav:focus-visible,
+.btn-logout:focus-visible {
+    outline: 3px solid #2668D7;
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* Telas de largura média: links mais próximos para caber tudo */
+@media (max-width: 1360px) {
+    .nav-app .links-nav { gap: 20px; }
+    .nav-app { padding-left: 4%; padding-right: 4%; }
+}
+
+@media (max-width: 1100px) {
+    .nav-app { flex-wrap: wrap; padding: 12px 16px; gap: 0; }
+    .nav-app .btn-menu { display: inline-flex; }
+    .nav-app .menu-principal {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-top: 12px;
+        padding: 12px 0 4px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .nav-app.menu-aberto .menu-principal { display: flex; }
+}
+
+@media (max-width: 900px) {
+    .nav-site { flex-wrap: wrap; padding: 12px 16px; gap: 0; }
+    .nav-site .btn-menu { display: inline-flex; }
+    .nav-site .menu-principal {
+        display: none;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-top: 12px;
+        padding: 12px 0 4px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .nav-site.menu-aberto .menu-principal { display: flex; }
+}
+
+/* Conteúdo do menu aberto (vale para os dois tipos de menu) */
+@media (max-width: 1100px) {
+    nav.menu-aberto .links-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        width: 100%;
+    }
+    nav.menu-aberto .links-nav a {
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+    nav.menu-aberto .links-nav a:hover { background: #f1f5ff; }
+    nav.menu-aberto .links-nav .link-ativo { background: #eef2ff; }
+    nav.menu-aberto .links-nav .link-ativo::after { display: none; }
+    nav.menu-aberto .btn-nav { width: 100%; padding: 12px; }
+    nav.menu-aberto .acessibilidade-botoes { flex-wrap: wrap; padding: 0 4px; }
+    nav.menu-aberto .nav-usuario {
+        justify-content: space-between;
+        padding: 12px 4px 0;
+        border-top: 1px solid #e2e8f0;
+    }
+}
+
+/* Anula ajustes antigos de ordem/largura do menu (menuUsuario.css / areaUsuario.css) */
+@media (max-width: 1100px) {
+    .nav-app .menu-principal > * { order: 0 !important; margin-left: 0 !important; width: 100%; justify-content: flex-start; }
+    .nav-app .menu-principal .nav-usuario { justify-content: space-between; }
+}
+@media (max-width: 900px) {
+    .nav-site .menu-principal > * { order: 0 !important; margin-left: 0 !important; width: 100%; }
+}

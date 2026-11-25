@@ -5,33 +5,37 @@ $paginaAtual = basename($_SERVER['PHP_SELF']);
 
 <!-- Importa o CSS específico do menu e acessibilidade -->
 <link rel="stylesheet" href="css/menuUsuario.css">
+<link rel="stylesheet" href="css/menu.css">
 
-<nav>
+<nav class="nav-app" aria-label="Menu principal">
     <div class="img-logo">
-        <img src="img/logo.png" alt="Logo Acesso+" class="logo-img">
+        <a href="areaUsuario.php"><img src="img/logo.png" alt="Acesso+ — início da área do beneficiário" class="logo-img"></a>
     </div>
+    <button type="button" class="btn-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-principal"><svg class="icone-abrir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="icone-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="menu-principal" id="menu-principal">
+        <div class="links-nav">
+            <a href="areaUsuario.php"<?php echo $paginaAtual == 'areaUsuario.php' ? ' class="link-ativo" aria-current="page"' : ''; ?>>Início</a>
+            <a href="meuPlano.php"<?php echo $paginaAtual == 'meuPlano.php' ? ' class="link-ativo" aria-current="page"' : ''; ?>>Meu plano</a>
+            <a href="agendamentos.php"<?php echo $paginaAtual == 'agendamentos.php' ? ' class="link-ativo" aria-current="page"' : ''; ?>>Agendamentos</a>
+            <a href="redeCredenciada.php"<?php echo $paginaAtual == 'redeCredenciada.php' ? ' class="link-ativo" aria-current="page"' : ''; ?>>Rede credenciada</a>
+            <a href="financeiro.php"<?php echo $paginaAtual == 'financeiro.php' ? ' class="link-ativo" aria-current="page"' : ''; ?>>Financeiro</a>
+        </div>
 
-    <div class="links-nav">
-        <a href="areaUsuario.php" class="<?php echo ($paginaAtual == 'areaUsuario.php') ? 'link-ativo' : ''; ?>">Início</a>
-        <a href="meuPlano.php" class="<?php echo ($paginaAtual == 'meuPlano.php') ? 'link-ativo' : ''; ?>">Meu plano</a>
-        <a href="agendamentos.php" class="<?php echo ($paginaAtual == 'agendamentos.php') ? 'link-ativo' : ''; ?>">Agendamentos</a>
-        <a href="redeCredenciada.php" class="<?php echo ($paginaAtual == 'redeCredenciada.php') ? 'link-ativo' : ''; ?>">Rede credenciada</a>
-        <a href="financeiro.php" class="<?php echo ($paginaAtual == 'financeiro.php') ? 'link-ativo' : ''; ?>">Financeiro</a>
-    </div>
+        <!-- Botões de Acessibilidade -->
+        <div class="acessibilidade-botoes" role="group" aria-label="Acessibilidade">
+            <button type="button" onclick="ligarLeitorVoz()" title="Leitor de Tela" class="btn-acessibilidade">🔊 Ouvir</button>
+            <button type="button" onclick="mudarFonte(1)" title="Aumentar Texto" aria-label="Aumentar texto" class="btn-acessibilidade">A+</button>
+            <button type="button" onclick="mudarFonte(-1)" title="Diminuir Texto" aria-label="Diminuir texto" class="btn-acessibilidade">A-</button>
+            <button type="button" onclick="alternarContraste()" title="Modo Escuro/Alto Contraste" aria-label="Alto contraste" class="btn-acessibilidade icone">◐</button>
+        </div>
 
-    <!-- Botões de Acessibilidade -->
-    <div class="acessibilidade-botoes">
-        <button onclick="ligarLeitorVoz()" title="Leitor de Tela" class="btn-acessibilidade">🔊 Ouvir</button>
-        <button onclick="mudarFonte(1)" title="Aumentar Texto" class="btn-acessibilidade">A+</button>
-        <button onclick="mudarFonte(-1)" title="Diminuir Texto" class="btn-acessibilidade">A-</button>
-        <button onclick="alternarContraste()" title="Modo Escuro/Alto Contraste" class="btn-acessibilidade icone">◐</button>
-    </div>
-
-    <div class="nav-usuario">
-        <span class="nav-nome"><?php echo htmlspecialchars($primeiroNome ?? 'Usuário'); ?></span>
-        <a href="encerrarSessaoUser.php" class="btn-logout">Sair</a>
+        <div class="nav-usuario">
+            <span class="nav-nome"><?php echo htmlspecialchars($primeiroNome ?? 'Usuário'); ?></span>
+            <a href="encerrarSessaoUser.php" class="btn-logout">Sair</a>
+        </div>
     </div>
 </nav>
+<script src="js/menu.js" defer></script>
 
 <!-- Script de Acessibilidade -->
 <script>

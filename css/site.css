@@ -1,0 +1,285 @@
+/*
+ * Acabamento das páginas públicas (início, planos, sobre, contato, privacidade, termos e admin).
+ * Carregue depois de edit.css / planos.css / paginas.css.
+ */
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body { color: #1e293b; }
+
+/* ---------- Início ---------- */
+
+header.hero {
+    min-height: 0;
+    padding: 64px 8% 112px;
+}
+
+.hero .header-content { max-width: 560px; }
+
+.hero-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #e0e9ff;
+    color: #0f259e;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.hero-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.btn-secundario-site {
+    display: inline-block;
+    padding: 15px 28px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f259e;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secundario-site:hover { background: #eef2ff; border-color: #2668D7; }
+
+.btn-planos:focus-visible,
+.btn-secundario-site:focus-visible,
+.qa-item:focus-visible,
+.footer-block a:focus-visible,
+.social-icons a:focus-visible {
+    outline: 3px solid #2668D7;
+    outline-offset: 3px;
+    border-radius: 8px;
+}
+
+
+/* Atalhos */
+.quick-access {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 20px;
+}
+
+.qa-item {
+    padding: 14px 8px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.qa-item:hover { background: #f8faff; }
+
+/* Benefícios */
+#beneficios { padding: 72px 8% 24px; }
+#beneficios h1 { margin-top: 0; font-size: 2rem; }
+#beneficios .cards-introducao { margin-bottom: 32px; }
+
+#beneficios .cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+#beneficios .card-content { max-width: none; height: 100%; }
+#beneficios .card-body p { margin-top: 8px; }
+
+/* Como funciona (início) */
+.como-funciona {
+    max-width: 1100px;
+    margin: 64px auto 0;
+    padding: 0 8%;
+    text-align: center;
+}
+
+.como-funciona h2 { color: #0f172a; font-size: 2rem; margin-bottom: 8px; }
+.como-funciona > p { color: #64748b; margin-bottom: 32px; }
+
+.passos {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    counter-reset: passo;
+    text-align: left;
+}
+
+.passos li {
+    counter-increment: passo;
+    padding: 28px 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #ffffff;
+}
+
+.passos li::before {
+    content: counter(passo);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: #2668D7;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.passos h3 { color: #0f172a; font-size: 1.1rem; margin-bottom: 6px; }
+.passos p { color: #64748b; line-height: 1.5; font-size: 0.95rem; }
+
+/* Chamada final */
+.chamada-final {
+    max-width: 1100px;
+    margin: 64px auto 0;
+    padding: 0 8%;
+}
+
+.chamada-final > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 40px 48px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #2668D7 0%, #0f259e 100%);
+    color: #ffffff;
+    text-align: left;
+}
+
+.chamada-final h2 { font-size: 1.7rem; margin-bottom: 6px; }
+.chamada-final p { color: rgba(255, 255, 255, 0.85); }
+
+.chamada-final a {
+    flex-shrink: 0;
+    padding: 14px 28px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #0f259e;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.chamada-final a:hover { background: #eef2ff; }
+
+/* ---------- Rodapé (todas as páginas públicas) ---------- */
+
+footer {
+    min-height: 0;
+    margin-top: 72px;
+    padding: 48px 8% 28px;
+    background: #0f259e;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr;
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* O logo é escuro: no fundo azul ele fica branco */
+.img-logo-footer {
+    height: 38px;
+    margin-bottom: 14px;
+    filter: brightness(0) invert(1);
+    align-self: flex-start;
+}
+
+.footer-block p { font-size: 0.98rem; color: rgba(255, 255, 255, 0.82); max-width: 300px; }
+.footer-block h4, .footer-siga h4 { font-size: 1rem; margin-bottom: 14px; color: #ffffff; }
+.footer-block a { display: block; font-size: 0.95rem; margin-bottom: 10px; color: rgba(255, 255, 255, 0.85); }
+.footer-block a:hover { color: #ffffff; }
+.footer-block br { display: none; }
+.footer-siga { color: #ffffff; }
+.footer-img-siganos { filter: brightness(0) invert(1); }
+
+.footer-copy {
+    max-width: 1100px;
+    margin: 36px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+/* ---------- Páginas institucionais (Sobre, Contato, Privacidade, Termos) ---------- */
+
+main.pagina { text-align: left; padding-top: 0; }
+.pagina h1 { margin-top: 0; }
+.pagina h1, .pagina .subtitulo { text-align: center; }
+.pagina .destaque { text-align: left; }
+.pagina ul { text-align: left; }
+.pagina .form-contato {
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+/* ---------- Admin: tabelas roláveis no celular ---------- */
+.tabela-rolagem { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tabela-rolagem table { min-width: 640px; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 1000px) {
+    #beneficios .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .footer-content { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+    header.hero {
+        flex-direction: column-reverse;
+        padding: 32px 20px 96px;
+        text-align: left;
+        gap: 28px;
+    }
+    .hero .header-content { max-width: none; }
+    .hero-logo { display: none; }
+    .hero-title { font-size: 2.2rem; }
+    .img-header { width: 100%; }
+    .img-header img { max-height: 320px; }
+    .passos { grid-template-columns: 1fr; }
+    .chamada-final > div { flex-direction: column; align-items: flex-start; padding: 32px 24px; }
+}
+
+@media (max-width: 640px) {
+    .quick-access-container { padding: 0 16px; }
+    .quick-access { grid-template-columns: repeat(2, 1fr); padding: 12px; }
+    #beneficios { padding: 56px 16px 16px; }
+    #beneficios h1, .como-funciona h2 { font-size: 1.6rem; }
+    #beneficios .cards { grid-template-columns: 1fr; }
+    .como-funciona, .chamada-final { padding: 0 16px; }
+    .hero-title { font-size: 1.9rem; }
+    .hero-acoes a { width: 100%; text-align: center; }
+    footer { padding: 40px 20px 24px; }
+    .footer-content { grid-template-columns: 1fr 1fr; gap: 28px; }
+    .footer-content > .footer-block:first-child { grid-column: 1 / -1; }
+    .pagina { margin: 32px auto; padding: 0 16px; }
+    .pagina .form-contato { padding: 20px; }
+}
+
+a.btn-nav { text-decoration: none; display: inline-block; }
+main.pagina { width: 100%; }
+.hero .hero-logo { display: none; }
+.hero .btn-planos { padding: 15px 28px; font-size: 1.05rem; }
+@media (max-width: 600px) {
+    .nav-admin { padding: 12px 16px; }
+    .nav-admin .links-nav { display: none; }
+}

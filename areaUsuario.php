@@ -25,10 +25,14 @@
         $dataNasc = $dadosUsuario['Dta_Nasc_User'];
         $dataNascFormatada = date("d/m/Y", strtotime($dataNasc));
         $plano = !empty($dadosUsuario['Nome_Plano']) ? "Plano " . $dadosUsuario['Nome_Plano'] : "Sem Plano"; 
+        $pagamentoPendente = !empty($dadosUsuario['Id_Plano']) && strtolower((string)$dadosUsuario['Status_Pagamento']) !== 'ativo';
+        $semPlano = empty($dadosUsuario['Id_Plano']);
     } else {
         $CPF = $_SESSION['CPF'] ?? "00000000000";
         $dataNascFormatada = "--/--/----";
         $plano = "Sem Plano";
+        $pagamentoPendente = false;
+        $semPlano = true;
     }
 
 	$CPF = preg_replace('/\D/', '', (string)$CPF); // aceita CPF gravado com ou sem pontuação
@@ -43,7 +47,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso+ | Área do Beneficiário</title>
-    <link rel="stylesheet" href="css/areaUsuario.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="css/areaUsuario.css?v=3">
 </head>
 <body>
     <?php include 'menuUsuario.php'; ?>
@@ -57,6 +61,16 @@
     </header>
 
     <main>
+        <?php if ($semPlano): ?>
+            <div class="alerta-plano aviso" role="status">
+                Você ainda não tem um plano. <a href="meuPlano.php#trocar-plano"><strong>Escolha um plano</strong></a> para começar a agendar consultas.
+            </div>
+        <?php elseif ($pagamentoPendente): ?>
+            <div class="alerta-plano aviso" role="status">
+                Sua mensalidade está pendente. Para liberar os agendamentos,
+                <a href="pagarPlano.php"><strong>pague com o Mercado Pago</strong></a> (cartão, PIX ou boleto).
+            </div>
+        <?php endif; ?>
         <div class="painel">
             <!-- Dados fictícios para demonstração acadêmica do TCC. -->
             <article class="carteirinha">
@@ -127,7 +141,7 @@
 
                         <?php
                     }
-                    echo '<a href="agendamentos.php" style="display: block; margin-top: 15px; font-size: 0.9rem; color: #2668D7; text-decoration: none; font-weight: bold;">Ver todos &rarr;</a>';
+                    echo '<a href="agendamentos.php" class="btn-ver-faturas" style="margin-top: 15px;">Ver todos &rarr;</a>';
                 } else {
                     echo "<div class='empty-agendamentos'>";
                     echo "<p>Você não tem nenhuma consulta futura agendada.</p>";
@@ -177,7 +191,7 @@
         </section>
     </main>
 
-    <footer style="text-align: center; padding: 20px; margin-top: 40px; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0;">
+    <footer class="rodape-painel">
         <p>© 2026 Acesso+ | Painel do Beneficiário</p>
     </footer>
 </body>

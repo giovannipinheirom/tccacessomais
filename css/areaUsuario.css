@@ -764,3 +764,72 @@ body.alto-contraste .plano-opcao {
 
 body.alto-contraste .plano-opcao.atual { border-color: #ffffff !important; }
 body.alto-contraste .plano-opcao li { color: #ffffff !important; }
+
+/* ---------- Revisão geral (layout e celular) ---------- */
+
+main { width: 100%; }
+
+footer.rodape-painel {
+    margin-top: 56px;
+    padding: 24px 16px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+/* Cards de acesso rápido em grade (4 lado a lado no computador) */
+.acesso-rapido .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+.acesso-rapido .card-content { max-width: none; height: 100%; }
+
+/* Itens de agendamento: texto nunca espremido */
+.agendamento-info { flex: 1; min-width: 0; }
+.agendamento-acoes { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+.btn-cancelar-consulta {
+    padding: 6px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #b91c1c;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-cancelar-consulta:hover { background: #fee2e2; }
+.btn-cancelar-consulta:focus-visible { outline: 3px solid #b91c1c; outline-offset: 2px; }
+
+.status.cancelada { background-color: #f1f5f9; color: #64748b; text-decoration: line-through; }
+
+.alerta-plano.aviso { background-color: #fef9c3; border-color: #fde047; color: #854d0e; }
+
+.lista-vazia {
+    padding: 28px 16px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    color: #475569;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .area-header { padding: 32px 16px 28px; }
+    .area-header h1 { font-size: 1.6rem; }
+    main { padding-left: 16px !important; padding-right: 16px !important; }
+    .agendamento-item {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        column-gap: 14px;
+        row-gap: 8px;
+        align-items: start;
+    }
+    .agendamento-item .status,
+    .agendamento-acoes { grid-column: 2; justify-self: start; margin-left: 0; align-items: flex-start; }
+    .detalhes-plano, .agendamentos, .novo-agendamento, .carteirinha { padding: 22px 18px; }
+    .detalhe-linha { flex-wrap: wrap; }
+}
+.dica-agendamento { margin-top: 12px; color: #64748b; font-size: 0.85rem; text-align: center; }

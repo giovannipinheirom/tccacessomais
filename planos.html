@@ -5,21 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso+ | Planos</title>
     <link rel="stylesheet" href="css/planos.css">
+    <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="css/menu.css">
 </head>
 <body>
-    <nav>
+    <nav class="nav-site">
         <div class="img-logo">
-            <img src="img/logo.png" alt="Logo Acesso+" class="logo-img">
+            <a href="index.html"><img src="img/logo.png" alt="Acesso+ — página inicial" class="logo-img"></a>
         </div>
-
-        <div class="links-nav">
-            <a href="index.html">Início</a>
-            <a href="planos.html" class="link-ativo">Planos</a>
-            <a href="index.html#beneficios">Benefícios</a>
-            <a href="contato.php">Contato</a>
+        <button type="button" class="btn-menu" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu-principal"><svg class="icone-abrir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="icone-fechar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div class="menu-principal" id="menu-principal">
+            <div class="links-nav">
+                <a href="index.html">Início</a>
+                <a href="planos.html" class="link-ativo" aria-current="page">Planos</a>
+                <a href="index.html#beneficios">Benefícios</a>
+                <a href="sobre.php">Sobre</a>
+                <a href="contato.php">Contato</a>
+            </div>
+            <a href="escolhaLogin.html" class="btn-nav">Entrar</a>
         </div>
-
-        <button class="btn-nav" onclick="irParaLogin()">Entrar</button>
     </nav>
 
     <header class="planos-header">
@@ -94,40 +98,38 @@
     <footer id="contato">
         <div class="footer-content">
             <div class="footer-block">
-                <img src="img/logo.png" alt="Logo Acesso+" class="img-logo-footer">
-                <p>Convênio médico voltado para pessoas com deficiência</p>
+                <img src="img/logo.png" alt="Acesso+" class="img-logo-footer">
+                <p>Convênio médico pensado para pessoas com deficiência, com rede acessível e atendimento humanizado.</p>
             </div>
 
             <div class="footer-block">
                 <h4>Institucional</h4>
-                <a href="sobre.php">Sobre Nós</a>
-                <br>
+                <a href="sobre.php">Sobre nós</a>
                 <a href="planos.html">Planos</a>
-                <br>
-                <a href="contato.php">Fale Conosco</a>
+                <a href="contato.php">Fale conosco</a>
             </div>
 
             <div class="footer-block">
                 <h4>Ajuda</h4>
-                <a href="escolhaLogin.html">Área de Acesso</a>
-                <br>
-                <a href="privacidade.php">Política de Privacidade</a>
-                <br>
-                <a href="termos.php">Termos de Uso</a>
+                <a href="escolhaLogin.html">Área de acesso</a>
+                <a href="privacidade.php">Política de privacidade</a>
+                <a href="termos.php">Termos de uso</a>
             </div>
 
             <div class="footer-siga">
                 <h4>Siga-nos</h4>
                 <div class="social-icons">
-                    <a href="https://www.instagram.com/acessomais.oficiall/" target="_blank" rel="noopener noreferrer"><img src="img/instagram.png" alt="Instagram" class="footer-img-siganos"></a>
-                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer"><img src="img/facebook.png" alt="Facebook" class="footer-img-siganos"></a>
-                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer"><img src="img/linkedin.png" alt="LinkedIn" class="footer-img-siganos"></a>
+                    <a href="https://www.instagram.com/acessomais.oficiall/" target="_blank" rel="noopener noreferrer" aria-label="Instagram do Acesso+"><img src="img/instagram.png" alt="" class="footer-img-siganos"></a>
+                    <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><img src="img/facebook.png" alt="" class="footer-img-siganos"></a>
+                    <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><img src="img/linkedin.png" alt="" class="footer-img-siganos"></a>
                 </div>
             </div>
         </div>
+        <p class="footer-copy">© 2026 Acesso+ — Trabalho de Conclusão de Curso, Etec Lauro Gomes.</p>
     </footer>
 
     <script src="js/index.js"></script>
+    <script src="js/menu.js"></script>
     <script>
         const planos = document.querySelectorAll(".plano-card");
 
