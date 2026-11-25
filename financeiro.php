@@ -6,6 +6,7 @@
     }
 
     include "conexao.php";
+    include "inc/pagamento.php";
     garantir_estrutura($con); // cria a tabela Faturas no Supabase se ainda não existir
 
     $nomeCompleto = $_SESSION['nome'];
@@ -31,30 +32,10 @@
     }
 
     // 2. LAZY LOADING (Geração Sob Demanda da Mensalidade do Mês Atual)
-    // Verifica se o paciente já possui fatura para o mês/ano vigente (MM/AAAA)
-    $mesAtual = date('m/Y');
-    if ($precoPlano > 0) {
-        $checkFatura = $con->query(
-            "SELECT Id_Fatura, Status_Fatura FROM Faturas WHERE Id_User = ? AND Mes_Referencia = ? LIMIT 1",
-            [$IdUsuario, $mesAtual]
-        );
-
-        if ($checkFatura && $checkFatura->num_rows == 0) {
-            // Virou o mês (ou primeiro acesso): cria a fatura do mês atual com vencimento para daqui a 5 dias
-            $vencimento = date('Y-m-d', strtotime('+5 days'));
-            $criada = $con->query(
-                "INSERT INTO Faturas (Id_User, Mes_Referencia, Valor, Data_Vencimento, Status_Fatura)
-                 VALUES (?, ?, ?, ?, 'Pendente')
-                 ON CONFLICT (Id_User, Mes_Referencia) DO NOTHING",
-                [$IdUsuario, $mesAtual, $precoPlano, $vencimento]
-            );
-
-            // Marca o status do plano como Pendente até a mensalidade do mês atual ser paga
-            if ($criada && $criada->num_rows > 0) {
-                $con->query("UPDATE Cadastro_Users SET Status_Pagamento = 'Pendente' WHERE Id_User = ?", [$IdUsuario]);
-                $statusPagamento = "Pendente";
-            }
-        }
+    // Cria a fatura do mês vigente (MM/AAAA) se ainda não existir, com vencimento em 5 dias
+    $faturaMes = fatura_do_mes($con, $IdUsuario);
+    if ($faturaMes && strtolower((string)$faturaMes['Status_Fatura']) !== 'pago') {
+        $statusPagamento = "Pendente";
     }
 
     // 3. Busca o histórico completo de faturas do paciente
@@ -98,6 +79,10 @@
             <?php elseif ($msg === 'falha'): ?>
                 <div class="alerta-pagamento erro" role="alert">
                     O pagamento não foi concluído ou foi recusado. Você pode tentar novamente clicando no botão de pagamento abaixo.
+                </div>
+            <?php elseif ($msg === 'valor'): ?>
+                <div class="alerta-pagamento erro" role="alert">
+                    O valor pago é menor que o valor atual da fatura (o plano foi trocado depois que o pagamento foi gerado). Fale com o suporte.
                 </div>
             <?php elseif ($msg === 'erro'): ?>
                 <div class="alerta-pagamento erro" role="alert">
@@ -149,7 +134,7 @@
                         ?>
                             <div class="fatura-item">
                                 <div class="fatura-info">
-                                    <h3>Mensalidade — Referência <?php echo htmlspecialchars($fatura['Mes_Referencia']); ?></h3>
+                                    <h3><?php echo !empty($fatura['Descricao']) ? htmlspecialchars($fatura['Descricao']) . ' — ' : 'Mensalidade — Referência '; ?><?php echo htmlspecialchars($fatura['Mes_Referencia']); ?></h3>
                                     <p><strong>Vencimento:</strong> <?php echo $vencFormatado; ?></p>
                                     <?php if ($statusFaturaLower == 'pago' && !empty($fatura['Data_Pagamento'])): ?>
                                         <p class="comprovante-pago">

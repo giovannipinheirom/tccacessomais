@@ -33,6 +33,17 @@ Navegador ───HTTPS──> páginas .php ┘
    - `SITE_URL` = endereço público do site (ex.: `https://xxxx.up.railway.app`), usado no link do e-mail.
 5. Aguarde o deploy e teste `https://xxxx.up.railway.app/api_app.php?action=ping`. A resposta deve ser `{"ok":true,...}`.
 
+## Planos e pagamento (Mercado Pago)
+
+- **Começar um plano:** depois do cadastro o paciente já entra logado e vai direto ao Checkout Pro do Mercado Pago
+  (`pagarPlano.php`) para pagar a primeira mensalidade. O plano fica **Ativo** quando o pagamento é aprovado.
+- **Trocar de plano** (menu *Meu plano*, `alterarPlano.php`):
+  - mensalidade do mês ainda em aberto → passa a ter o valor do novo plano e o paciente vai ao Mercado Pago;
+  - mês já pago e plano novo mais caro → é criada uma fatura só com a **diferença** e o paciente vai ao Mercado Pago;
+  - mês já pago e plano novo mais barato → nada a pagar agora; o novo valor vale a partir da próxima fatura.
+- As regras ficam em `inc/pagamento.php` (também usadas pelo Financeiro e pela API do app).
+- O retorno do Mercado Pago (`retorno_pagamento.php`) confere o pagamento na API oficial e também se o valor pago cobre a fatura.
+
 ## E-mail de "Esqueci minha senha" (Resend)
 
 O site não usa o Supabase Auth (os logins ficam nas tabelas `Cadastro_Users` e `Cadastro_Profissionais`), então os e-mails

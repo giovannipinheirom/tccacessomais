@@ -42,7 +42,7 @@
             $_SESSION['tipo_conta'] = 'paciente'; // NOVO: Define a permissão correta
             
             // Volta para a página que o paciente tentou abrir (somente páginas da área do paciente)
-            $destinos = ['areaUsuario.php', 'agendamentos.php', 'redeCredenciada.php', 'meuPlano.php'];
+            $destinos = ['areaUsuario.php', 'agendamentos.php', 'redeCredenciada.php', 'meuPlano.php', 'financeiro.php', 'pagarPlano.php'];
             $voltar = $_POST['voltar'] ?? '';
             header("location: " . (in_array($voltar, $destinos, true) ? $voltar : 'areaUsuario.php'));
             exit();

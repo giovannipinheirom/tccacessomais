@@ -1,8 +1,8 @@
 <?php
 /*
  * Troca de plano do paciente (aba "Meu plano").
- * Recebe o plano escolhido, confere o token do formulário e grava o novo plano.
- * A mensalidade do mês atual que ainda não foi paga passa a ter o valor do novo plano.
+ * Confere o token do formulário, grava o novo plano e leva o paciente direto ao Mercado Pago
+ * para pagar a mensalidade (ou a diferença, se o mês já estava pago com um plano mais barato).
  */
 session_start();
 
@@ -18,12 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST'
 }
 
 include "conexao.php";
-garantir_estrutura($con); // garante que a tabela Faturas existe
+include "inc/pagamento.php";
+garantir_estrutura($con);
 
 $idUsuario = (int)$_SESSION['id'];
-$idPlano = (int)($_POST['id_plano'] ?? 0);
+$troca = trocar_plano($con, $idUsuario, (int)($_POST['id_plano'] ?? 0));
 
-$plano = alterar_plano_usuario($con, $idUsuario, $idPlano);
+if ($troca['situacao'] === 'pagar') {
+    $checkout = checkout_mercado_pago($con, $troca['id_fatura'], $idUsuario);
+    if (isset($checkout['url'])) {
+        header("Location: " . $checkout['url']);
+        exit();
+    }
+    alerta_e_volta("Plano alterado para " . $troca['plano']['Nome_Plano'] . ", mas o pagamento não abriu.\n" . $checkout['erro']
+        . "\n\nVocê pode pagar depois pelo menu Financeiro.", 'financeiro.php');
+}
 
-header("location: meuPlano.php?msg=" . ($plano ? 'plano_alterado' : 'plano_erro'));
+header("location: meuPlano.php?msg=" . ($troca['situacao'] === 'sem_cobranca' ? 'plano_sem_cobranca' : 'plano_erro'));
 exit();

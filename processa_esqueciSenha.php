@@ -1,4 +1,5 @@
 <?php
+session_start();
 include "conexao.php";
 garantir_estrutura($con);
 
@@ -28,7 +29,12 @@ $emailConfigurado = $resend_api_key !== '';
 $linkDemonstracao = null; // só usado quando o Resend não está configurado
 $falhaEnvio = false;
 
-$verifica = $con->query("SELECT {$t['id']}, {$t['nome']}, {$t['email']} FROM {$t['tabela']} WHERE LOWER({$t['email']}) = LOWER(?)", [$email]);
+// Evita vários e-mails seguidos para o mesmo endereço (no máximo 1 a cada 60 segundos)
+$chaveEnvio = $tipo . '|' . strtolower($email);
+$ultimoEnvio = $_SESSION['envios_senha'][$chaveEnvio] ?? 0;
+$aguardar = $emailConfigurado && (time() - $ultimoEnvio) < 60;
+
+$verifica = $aguardar ? false : $con->query("SELECT {$t['id']}, {$t['nome']}, {$t['email']} FROM {$t['tabela']} WHERE LOWER({$t['email']}) = LOWER(?)", [$email]);
 if ($email !== '' && $verifica && $verifica->num_rows > 0) {
     $usuario = $verifica->fetch_assoc();
     $token = bin2hex(random_bytes(16));
@@ -60,10 +66,17 @@ HTML;
             . "Acesse o link abaixo para criar uma nova senha:\n" . $linkRecuperacao . "\n\n"
             . "Se você não solicitou isso, ignore este e-mail. O link expira em 1 hora.";
         $falhaEnvio = !enviar_email($usuario[$t['email']], "Redefinição de senha - Acesso+", $html, $texto);
+        if (!$falhaEnvio) $_SESSION['envios_senha'][$chaveEnvio] = time();
     } else {
         $linkDemonstracao = $linkRecuperacao;
     }
 }
+$voltarLogin = $t['login'];
+$icone = [
+    'email' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+    'erro'  => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
+    'chave' => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -71,35 +84,63 @@ HTML;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Senha | Acesso+</title>
-    <link rel="stylesheet" href="css/loginUser.css">
+    <link rel="stylesheet" href="css/senha.css">
 </head>
-<body>
-    <section class="containerPai">
-        <a href="<?php echo $t['login']; ?>" class="logo-card"><img src="img/logo.png" alt="Logo Acesso+ e voltar para o login"></a>
-        <div class="card loginActive">
-            <div class="esquerda">
-                <div class="formLogin" style="width: 100%;">
-                    <h2>Recuperar Senha</h2>
-                    <?php if ($linkDemonstracao): ?>
-                        <p style="text-align: center; color: #475569; margin-bottom: 16px;">
-                            O envio de e-mails ainda não foi configurado no servidor (variável RESEND_API_KEY).
-                            Use o botão abaixo para criar a nova senha (com o Resend configurado, este link chega no e-mail cadastrado).
-                        </p>
-                        <a href="<?php echo htmlspecialchars($linkDemonstracao); ?>" class="esqueci-senha" style="display:block; text-align:center; font-weight:600;">Criar nova senha &rarr;</a>
-                    <?php elseif ($falhaEnvio): ?>
-                        <p style="text-align: center; color: #ef4444;">
-                            Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.
-                        </p>
-                    <?php else: ?>
-                        <p style="text-align: center; color: #475569;">
-                            Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha. Verifique também a caixa de spam.
-                        </p>
-                    <?php endif; ?>
-                    <a href="<?php echo $t['login']; ?>" class="esqueci-senha" style="display: block; text-align: center; margin-top: 20px;">&larr; Voltar para o Login</a>
-                </div>
+<body class="pagina-senha">
+    <main class="senha-card">
+        <?php include 'inc/ladoSenha.php'; ?>
+
+        <section class="senha-conteudo">
+            <div class="senha-topo">
+                <a href="index.html"><img src="img/logo.png" alt="Acesso+ - página inicial"></a>
+                <a href="<?php echo $voltarLogin; ?>" class="senha-voltar">&larr; Voltar para o login</a>
             </div>
-            <div class="direita" style="background: url('img/background2.png') no-repeat center center / cover;"></div>
-        </div>
-    </section>
+
+            <div class="senha-corpo" role="status">
+                <?php if ($linkDemonstracao): ?>
+                    <div class="senha-icone" aria-hidden="true"><?php echo $icone['chave']; ?></div>
+                    <h1>Link de recuperação</h1>
+                    <p class="senha-sub">
+                        O envio de e-mails ainda não foi configurado no servidor (variável <strong>RESEND_API_KEY</strong>).
+                        Para demonstração, use o botão abaixo para criar a nova senha.
+                    </p>
+                    <div class="acoes-senha">
+                        <a href="<?php echo htmlspecialchars($linkDemonstracao); ?>" class="btn-senha">Criar nova senha</a>
+                    </div>
+                <?php elseif ($falhaEnvio): ?>
+                    <div class="senha-icone erro" aria-hidden="true"><?php echo $icone['erro']; ?></div>
+                    <h1>Não conseguimos enviar</h1>
+                    <p class="senha-sub">Houve um problema ao enviar o e-mail agora. Aguarde alguns minutos e tente de novo.</p>
+                    <div class="acoes-senha">
+                        <a href="esqueciSenha.html<?php echo $tipo === 'profissional' ? '?tipo=profissional' : ''; ?>" class="btn-senha">Tentar novamente</a>
+                    </div>
+                <?php else: ?>
+                    <div class="senha-icone" aria-hidden="true"><?php echo $icone['email']; ?></div>
+                    <h1>Verifique seu e-mail</h1>
+                    <p class="senha-sub">
+                        Se existir uma conta com <strong><?php echo htmlspecialchars($email); ?></strong>,
+                        você vai receber um link para criar uma nova senha.
+                    </p>
+                    <ol class="passos-email">
+                        <li>Abra o e-mail “Redefinição de senha - Acesso+”</li>
+                        <li><span>Clique em <strong>Criar nova senha</strong></span></li>
+                        <li>Escolha a nova senha e entre normalmente</li>
+                    </ol>
+                    <div class="acoes-senha">
+                        <a href="<?php echo $voltarLogin; ?>" class="btn-senha">Voltar para o login</a>
+                        <form action="processa_esqueciSenha.php" method="post">
+                            <input type="hidden" name="tipo" value="<?php echo $tipo; ?>">
+                            <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
+                            <button type="submit" class="btn-secundario">Não recebi, enviar de novo</button>
+                        </form>
+                    </div>
+                    <p class="texto-pequeno">
+                        O link vale por 1 hora. Confira também a caixa de spam ou lixo eletrônico.
+                        <?php if ($aguardar): ?><br>Aguarde 1 minuto entre um envio e outro.<?php endif; ?>
+                    </p>
+                <?php endif; ?>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

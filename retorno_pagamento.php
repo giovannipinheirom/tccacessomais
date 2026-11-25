@@ -44,6 +44,17 @@ $pagamento = json_decode((string)$resposta, true) ?: [];
 $statusMP = $pagamento['status'] ?? '';
 $idFatura = isset($pagamento['external_reference']) ? (int)$pagamento['external_reference'] : 0;
 
+// Confere se o valor pago cobre o valor atual da fatura (ex.: boleto antigo gerado antes de uma troca de plano)
+if ($statusMP === 'approved' && $idFatura > 0) {
+    $faturaAtual = $con->query("SELECT Valor FROM Faturas WHERE Id_Fatura = ? AND Id_User = ?", [$idFatura, $idUsuario]);
+    $valorFatura = $faturaAtual ? (float)($faturaAtual->fetch_assoc()['Valor'] ?? 0) : 0;
+    if ((float)($pagamento['transaction_amount'] ?? 0) + 0.009 < $valorFatura) {
+        error_log('[Acesso+] Pagamento ' . $paymentId . ' com valor menor que a fatura ' . $idFatura);
+        header("location: financeiro.php?msg=valor");
+        exit();
+    }
+}
+
 if ($statusMP === 'approved' && $idFatura > 0) {
     // Atualiza a fatura para Pago e salva o comprovante oficial do Mercado Pago
     $atualizada = $con->query(

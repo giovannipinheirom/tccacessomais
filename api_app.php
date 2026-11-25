@@ -491,12 +491,14 @@ switch ($action) {
         }
 
         // Mesma regra do site (aba Meu plano): a fatura em aberto do mês passa a ter o valor do novo plano
+        require_once __DIR__ . '/inc/pagamento.php';
         garantir_estrutura($con);
-        $plano = alterar_plano_usuario($con, $idUser, $idPlano);
-        if (!$plano) {
+        $troca = trocar_plano($con, $idUser, $idPlano);
+        if ($troca['situacao'] === 'erro') {
             responder(['ok' => false, 'erro' => 'Plano ou paciente não encontrado.'], 400);
         }
-        responder(['ok' => true, 'id_plano' => $idPlano, 'plano' => $plano['Nome_Plano'], 'preco_plano' => (float)$plano['Preco']]);
+        responder(['ok' => true, 'id_plano' => $idPlano, 'plano' => $troca['plano']['Nome_Plano'],
+            'preco_plano' => (float)$troca['plano']['Preco'], 'situacao' => $troca['situacao'], 'id_fatura' => $troca['id_fatura']]);
         break;
 
     // =========================================================================

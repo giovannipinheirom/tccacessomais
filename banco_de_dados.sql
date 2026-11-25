@@ -103,8 +103,10 @@ CREATE TABLE IF NOT EXISTS Faturas (
     Status_Fatura VARCHAR(50) DEFAULT 'Pendente', -- Pendente, Pago
     Id_Pagamento_MP VARCHAR(100) NULL,           -- id do pagamento no Mercado Pago (comprovante)
     Data_Pagamento TIMESTAMP NULL,
-    UNIQUE (Id_User, Mes_Referencia)
+    Descricao VARCHAR(150) NULL                  -- vazio = mensalidade; preenchido = diferença de troca de plano
 );
+-- Uma mensalidade por mês por paciente (as faturas de diferença de plano ficam fora desta regra)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_faturas_mensalidade ON Faturas (Id_User, Mes_Referencia) WHERE Descricao IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_consultas_profissional_data ON Consultas (Id_Profissional, Data_Consulta);
 CREATE INDEX IF NOT EXISTS idx_consultas_user ON Consultas (Id_User);

@@ -72,9 +72,10 @@
     </header>
 
     <main>
-        <?php if ($msg === 'plano_alterado'): ?>
+        <?php if ($msg === 'plano_sem_cobranca'): ?>
             <div class="alerta-plano sucesso" role="status">
-                Plano alterado para <strong><?php echo htmlspecialchars($plano); ?></strong>! A nova mensalidade de R$ <?php echo $precoFormatado; ?> já vale para a fatura em aberto.
+                Plano alterado para <strong><?php echo htmlspecialchars($plano); ?></strong>! A mensalidade deste mês já estava paga,
+                então não há nada a pagar agora. O novo valor de R$ <?php echo $precoFormatado; ?> vale a partir da próxima fatura.
             </div>
         <?php elseif ($msg === 'plano_erro'): ?>
             <div class="alerta-plano erro" role="alert">
@@ -135,7 +136,7 @@
 
                 <div class="acao-plano-financeiro">
                     <?php if (strtolower($status) !== 'ativo'): ?>
-                        <a href="financeiro.php" class="btn-regularizar-plano">Regularizar mensalidade agora</a>
+                        <a href="pagarPlano.php" class="btn-regularizar-plano">Pagar mensalidade com Mercado Pago</a>
                     <?php else: ?>
                         <a href="financeiro.php" class="btn-ver-faturas">Ver histórico de faturas &rarr;</a>
                     <?php endif; ?>
@@ -145,8 +146,11 @@
         </div>
 
         <section class="trocar-plano" id="trocar-plano" aria-labelledby="titulo-trocar-plano">
-            <h2 id="titulo-trocar-plano">Trocar de plano</h2>
-            <p class="trocar-plano-intro">Escolha outro plano quando quiser. A mudança vale na hora, e a mensalidade em aberto passa a ter o novo valor.</p>
+            <h2 id="titulo-trocar-plano"><?php echo $idPlanoAtual ? 'Trocar de plano' : 'Escolha seu plano'; ?></h2>
+            <p class="trocar-plano-intro">
+                Ao escolher um plano você é levado ao Mercado Pago para pagar. Se a mensalidade deste mês já foi paga,
+                você paga só a diferença para um plano mais caro; para um plano mais barato, o novo valor vale a partir do próximo mês.
+            </p>
 
             <div class="planos-opcoes">
                 <?php foreach ($planosDisponiveis as $opcao):
@@ -168,10 +172,10 @@
                         <button type="button" class="btn-escolher-plano" disabled>Plano atual</button>
                     <?php else: ?>
                         <form action="alterarPlano.php" method="post"
-                              onsubmit="return confirm(<?php echo htmlspecialchars(json_encode('Trocar para o plano ' . $nomeOpcao . ' (R$ ' . $precoOpcao . '/mês)?', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>);">
+                              onsubmit="return confirm(<?php echo htmlspecialchars(json_encode(($idPlanoAtual ? 'Trocar' : 'Assinar') . ' o plano ' . $nomeOpcao . ' (R$ ' . $precoOpcao . '/mês)?', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>);">
                             <input type="hidden" name="csrf" value="<?php echo $_SESSION['csrf_plano']; ?>">
                             <input type="hidden" name="id_plano" value="<?php echo (int)$opcao['Id_Plano']; ?>">
-                            <button type="submit" class="btn-escolher-plano">Mudar para <?php echo htmlspecialchars($nomeOpcao); ?></button>
+                            <button type="submit" class="btn-escolher-plano"><?php echo $idPlanoAtual ? 'Mudar para ' : 'Assinar '; ?><?php echo htmlspecialchars($nomeOpcao); ?></button>
                         </form>
                     <?php endif; ?>
                 </article>

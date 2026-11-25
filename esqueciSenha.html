@@ -1,42 +1,72 @@
 <!DOCTYPE html>
-<html lang="PT-br">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Senha | Acesso+</title>
-    <link rel="stylesheet" href="css/loginUser.css">
+    <link rel="stylesheet" href="css/senha.css">
 </head>
-<body>
-    <section class="containerPai">
-        <a href="loginUser.html" class="logo-card"><img src="img/logo.png" alt="Logo Acesso+ e Voltar para login"></a>
-        <div class="card loginActive">
-            <div class="esquerda">
-                <div class="formLogin" style="width: 100%;">
-                    <h2>Recuperar Senha</h2>
-                    <p style="text-align: center; margin-bottom: 20px; color: #475569;">Digite o e-mail cadastrado na sua conta para receber o link de redefinição.</p>
-                    <form action="processa_esqueciSenha.php" method="post">
-                        <select name="tipo" id="tipo" aria-label="Tipo de conta" required>
-                            <option value="paciente">Sou paciente</option>
-                            <option value="profissional">Sou profissional de saúde</option>
-                        </select>
-                        <input type="email" name="email" placeholder="Digite seu e-mail" aria-label="Digite seu e-mail" required>
-                        <button type="submit" name="submit">Enviar E-mail</button>
-                    </form>
-                    <a href="loginUser.html" class="esqueci-senha" style="display: block; text-align: center; margin-top: 15px;">&larr; Voltar para o Login</a>
+<body class="pagina-senha">
+    <main class="senha-card">
+        <aside class="senha-lado" aria-hidden="true">
+            <div>
+                <span class="senha-lado-selo">Acesso+</span>
+                <h2>Recupere o acesso com segurança</h2>
+                <p>Em poucos passos você cria uma nova senha e volta a cuidar da sua saúde.</p>
+            </div>
+            <ul>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>O link chega no e-mail cadastrado e vale por 1 hora</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Cada link funciona uma única vez</li>
+                <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Sua senha é guardada com criptografia</li>
+            </ul>
+            <p class="senha-lado-rodape">Convênio médico pensado para pessoas com deficiência.</p>
+        </aside>
+
+        <section class="senha-conteudo">
+            <div class="senha-topo">
+                <a href="index.html"><img src="img/logo.png" alt="Acesso+ - página inicial"></a>
+                <a href="loginUser.html" class="senha-voltar link-login">&larr; Voltar para o login</a>
+            </div>
+
+            <div class="senha-corpo">
+                <div class="senha-icone" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
                 </div>
+                <h1>Esqueceu sua senha?</h1>
+                <p class="senha-sub">Sem problema. Informe o e-mail da sua conta e enviaremos um link para você criar uma nova senha.</p>
+
+                <form action="processa_esqueciSenha.php" method="post" class="senha-form">
+                    <fieldset class="tipo-conta">
+                        <legend class="campo-titulo">Tipo de conta</legend>
+                        <input type="radio" name="tipo" id="tipo-paciente" value="paciente" checked>
+                        <label for="tipo-paciente">Paciente</label>
+                        <input type="radio" name="tipo" id="tipo-profissional" value="profissional">
+                        <label for="tipo-profissional">Profissional</label>
+                    </fieldset>
+
+                    <div class="campo">
+                        <label for="email">E-mail cadastrado</label>
+                        <input type="email" name="email" id="email" placeholder="voce@exemplo.com" autocomplete="email" required autofocus>
+                    </div>
+
+                    <button type="submit" name="submit" class="btn-senha">Enviar link de recuperação</button>
+                </form>
+
+                <p class="texto-pequeno">Lembrou a senha? <a href="loginUser.html" class="link-login">Entrar</a></p>
             </div>
-            <div class="direita" style="background: url('img/background2.png') no-repeat center center / cover;">
-                <!-- Apenas parte visual direita mantida para coerência do layout -->
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
     <script>
         // Abre já com o tipo certo quando vem do login do profissional (esqueciSenha.html?tipo=profissional)
-        if (new URLSearchParams(location.search).get('tipo') === 'profissional') {
-            document.getElementById('tipo').value = 'profissional';
-            document.querySelector('.logo-card').href = 'loginProfissional.html';
-            document.querySelectorAll('a.esqueci-senha').forEach(a => a.href = 'loginProfissional.html');
+        const loginDoTipo = { paciente: 'loginUser.html', profissional: 'loginProfissional.html' };
+        function atualizarLinks(tipo) {
+            document.querySelectorAll('.link-login').forEach(a => a.href = loginDoTipo[tipo]);
         }
+        if (new URLSearchParams(location.search).get('tipo') === 'profissional') {
+            document.getElementById('tipo-profissional').checked = true;
+            atualizarLinks('profissional');
+        }
+        document.querySelectorAll('input[name="tipo"]').forEach(r => r.addEventListener('change', () => atualizarLinks(r.value)));
     </script>
 </body>
 </html>

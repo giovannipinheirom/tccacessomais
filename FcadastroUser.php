@@ -1,4 +1,5 @@
 <?php
+session_start();
 include "conexao.php";  
 
 $nome =$_POST['nome'];
@@ -81,15 +82,21 @@ if ($id_plano <= 0) $id_plano = 1; // Padrão Essencial se algo falhar
 $comando = "INSERT INTO Cadastro_Users 
     (Nome_User, Dta_Nasc_User, Genero_User, CPF_User, CEP_User, Numero_User, Rua_User, Bairro_User, Cidade_User, Latitude_User, Longitude_User, Email_User, Senha_User, Num_Tel_User, Est_Civil_User, Id_Plano, Status_Pagamento) 
     VALUES 
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')";
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')
+    RETURNING Id_User";
 
 $resulta = $con->query($comando, [$nome, $data_nasc, $genero, $CPF, $CEP, $numero, $rua, $bairro, $cidade, $latitude, $longitude, $email, senha_hash($senha), $telefone, $est_civil, $id_plano]);
 
-if ($resulta) {
-    // Exibe um alerta e redireciona o usuário para a tela de login
+if ($resulta && $resulta->num_rows > 0) {
+    // Já entra logado e vai direto ao Mercado Pago pagar a primeira mensalidade (começa o plano)
+    session_regenerate_id(true);
+    $_SESSION['CPF'] = $CPF;
+    $_SESSION['nome'] = $nome;
+    $_SESSION['id'] = (int)$resulta->fetch_assoc()['Id_User'];
+    $_SESSION['tipo_conta'] = 'paciente';
     echo "<script>
-            alert('Cadastro realizado com sucesso! Agora você já pode fazer o login.');
-            window.location.href = 'loginUser.html'; // Altere para a sua página de login
+            alert('Cadastro realizado com sucesso! Agora você será levado ao Mercado Pago para pagar a primeira mensalidade e ativar o seu plano.');
+            window.location.href = 'pagarPlano.php';
           </script>";
 } else {
     // Se houver algum erro na gravação do banco

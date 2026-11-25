@@ -55,6 +55,7 @@ const COLUNAS_DO_BANCO = [
     'Id_Consulta', 'Data_Consulta', 'Hora_Consulta', 'Status_Consulta', 'Observacoes_Medico', 'Data_Criacao_Consulta',
     'Id_Mensagem', 'Nome_Contato', 'Email_Contato', 'Assunto_Contato', 'Mensagem_Contato', 'Data_Envio', 'Lida',
     'Id_Fatura', 'Mes_Referencia', 'Valor', 'Data_Vencimento', 'Status_Fatura', 'Id_Pagamento_MP', 'Data_Pagamento',
+    'Descricao',
 ];
 
 /** Gera o hash seguro (bcrypt) de uma senha antes de gravar no banco. */
@@ -113,32 +114,25 @@ function garantir_estrutura(Banco $con): void
         Status_Fatura VARCHAR(50) DEFAULT 'Pendente',
         Id_Pagamento_MP VARCHAR(100) NULL,
         Data_Pagamento TIMESTAMP NULL,
-        UNIQUE (Id_User, Mes_Referencia)
+        Descricao VARCHAR(150) NULL
     )");
     $con->query("ALTER TABLE Faturas ENABLE ROW LEVEL SECURITY");
-}
 
-/**
- * Troca o plano de um paciente.
- * A fatura do mês atual que ainda não foi paga (nem está em processamento no Mercado Pago)
- * passa a ter o valor do novo plano. Faturas já pagas não mudam.
- * Retorna o novo plano (Id_Plano, Nome_Plano, Preco) ou null se o plano não existir.
- */
-function alterar_plano_usuario(Banco $con, int $idUser, int $idPlano): ?array
-{
-    $r = $con->query("SELECT Id_Plano, Nome_Plano, Preco FROM Planos WHERE Id_Plano = ?", [$idPlano]);
-    $plano = $r ? $r->fetch_assoc() : null;
-    if (!$plano || $idUser <= 0) return null;
-
-    $ok = $con->query("UPDATE Cadastro_Users SET Id_Plano = ? WHERE Id_User = ?", [$idPlano, $idUser]);
-    if (!$ok || $ok->num_rows === 0) return null;
-
-    $con->query(
-        "UPDATE Faturas SET Valor = ?
-         WHERE Id_User = ? AND Mes_Referencia = ? AND Status_Fatura <> 'Pago' AND Id_Pagamento_MP IS NULL",
-        [$plano['Preco'], $idUser, date('m/Y')]
+    // Troca de plano: além da mensalidade (Descricao vazia), o mês pode ter uma fatura com a diferença
+    // entre os planos. A regra "uma fatura por mês" passa a valer só para a mensalidade.
+    $temDescricao = $con->query(
+        "SELECT 1 FROM information_schema.columns
+         WHERE table_schema = current_schema() AND table_name = 'faturas' AND column_name = 'descricao'"
     );
-    return $plano;
+    if ($temDescricao && $temDescricao->num_rows === 0) {
+        $con->query("ALTER TABLE Faturas ADD COLUMN IF NOT EXISTS Descricao VARCHAR(150) NULL");
+    }
+    $con->query("DO $$ DECLARE c text; BEGIN
+        FOR c IN SELECT conname FROM pg_constraint WHERE conrelid = 'faturas'::regclass AND contype = 'u' LOOP
+            EXECUTE 'ALTER TABLE faturas DROP CONSTRAINT ' || quote_ident(c);
+        END LOOP;
+    END $$");
+    $con->query("CREATE UNIQUE INDEX IF NOT EXISTS idx_faturas_mensalidade ON Faturas (Id_User, Mes_Referencia) WHERE Descricao IS NULL");
 }
 
 /** Endereço público do site (SITE_URL ou o endereço que o navegador usou). */
