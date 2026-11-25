@@ -28,7 +28,25 @@ Navegador ───HTTPS──> páginas .php ┘
    - `GOOGLE_MAPS_API_KEY` = sua chave do Google Maps (opcional, só para o mapa da Rede Credenciada)
    - `MP_ACCESS_TOKEN` = Access Token do Mercado Pago (Checkout Pro), usado no menu **Financeiro** para pagar a mensalidade. Use a credencial de **teste** (`APP_USR-...` da conta de teste). A tabela `Faturas` é criada sozinha no primeiro acesso ao Financeiro.
    - `ADMIN_USUARIO` e `ADMIN_SENHA` = login do Painel do Administrador (`admin.php`). Sem elas, o painel fica bloqueado.
+   - `RESEND_API_KEY` = API Key do Resend (`re_...`), usada para enviar o e-mail de **Esqueci minha senha** (veja a seção abaixo).
+   - `RESEND_FROM` = remetente do e-mail, ex.: `Acesso+ <nao-responda@seudominio.com.br>`.
+   - `SITE_URL` = endereço público do site (ex.: `https://xxxx.up.railway.app`), usado no link do e-mail.
 5. Aguarde o deploy e teste `https://xxxx.up.railway.app/api_app.php?action=ping`. A resposta deve ser `{"ok":true,...}`.
+
+## E-mail de "Esqueci minha senha" (Resend)
+
+O site não usa o Supabase Auth (os logins ficam nas tabelas `Cadastro_Users` e `Cadastro_Profissionais`), então os e-mails
+do Supabase Auth não são usados aqui. O PHP envia o e-mail direto pela **API do Resend** (HTTPS), com a mesma conta Resend
+ligada ao Supabase. Usamos a API em vez de SMTP porque o Railway bloqueia SMTP nos planos gratuito/Hobby.
+
+1. Em https://resend.com/api-keys crie uma API Key com permissão **Sending access** (se você ligou o Resend ao Supabase
+   pela integração, a chave já existe na conta; crie outra só para o site).
+2. Em https://resend.com/domains adicione e verifique o seu domínio (registros DNS). Sem domínio verificado, o Resend só
+   aceita o remetente `onboarding@resend.dev` e só entrega para o e-mail dono da conta Resend.
+3. No Railway, cadastre `RESEND_API_KEY`, `RESEND_FROM` (com o domínio verificado) e `SITE_URL`.
+4. Teste em `esqueciSenha.html`. Erros de envio aparecem nos logs do Railway como `[Acesso+] Resend HTTP ...`.
+
+Enquanto `RESEND_API_KEY` não estiver configurada, o site continua no modo de demonstração e mostra o link na tela.
 
 ## 3. Apontar o app para o site
 

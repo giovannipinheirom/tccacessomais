@@ -36,6 +36,21 @@
     $statusClass = (strtolower($status) == 'ativo') ? 'confirmado' : 'pendente';
     $precoFormatado = number_format($preco, 2, ',', '.');
     $validade = date("m/Y", strtotime("+1 year"));
+
+    // Troca de plano: lista os planos do banco e protege o formulário com um token (CSRF)
+    $idPlanoAtual = (int)($dadosUsuario['Id_Plano'] ?? 0);
+    $planosDisponiveis = [];
+    $resPlanos = $con->query("SELECT Id_Plano, Nome_Plano, Preco FROM Planos ORDER BY Preco ASC");
+    while ($resPlanos && ($linhaPlano = $resPlanos->fetch_assoc())) $planosDisponiveis[] = $linhaPlano;
+    if (empty($_SESSION['csrf_plano'])) $_SESSION['csrf_plano'] = bin2hex(random_bytes(16));
+
+    // Benefícios exibidos em cada plano (os mesmos da página pública planos.html)
+    $beneficiosPlanos = [
+        'essencial' => ['Consultas clínicas', 'Rede básica acessível', 'Carteirinha digital', 'Suporte por WhatsApp'],
+        'plus'      => ['Tudo do plano Essencial', 'Consultas com especialistas', 'Terapias e reabilitação', 'Agendamento prioritário'],
+        'premium'   => ['Tudo do plano Plus', 'Rede credenciada ampliada', 'Acompanhamento multidisciplinar', 'Check-up anual'],
+    ];
+    $msg = $_GET['msg'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -57,12 +72,22 @@
     </header>
 
     <main>
+        <?php if ($msg === 'plano_alterado'): ?>
+            <div class="alerta-plano sucesso" role="status">
+                Plano alterado para <strong><?php echo htmlspecialchars($plano); ?></strong>! A nova mensalidade de R$ <?php echo $precoFormatado; ?> já vale para a fatura em aberto.
+            </div>
+        <?php elseif ($msg === 'plano_erro'): ?>
+            <div class="alerta-plano erro" role="alert">
+                Não foi possível alterar o plano. Atualize a página e tente novamente.
+            </div>
+        <?php endif; ?>
+
         <div class="painel">
             <!-- Dados fictícios para demonstração acadêmica do TCC. -->
             <article class="carteirinha">
                 <div class="carteirinha-topo">
                     <span class="carteirinha-marca">Acesso+</span>
-                    <span class="carteirinha-plano"><?php echo $plano; ?></span>
+                    <span class="carteirinha-plano"><?php echo htmlspecialchars($plano); ?></span>
                 </div>
                 <div class="carteirinha-info">
                     <p class="carteirinha-rotulo">Titular</p>
@@ -114,9 +139,45 @@
                     <?php else: ?>
                         <a href="financeiro.php" class="btn-ver-faturas">Ver histórico de faturas &rarr;</a>
                     <?php endif; ?>
+                    <a href="#trocar-plano" class="btn-ver-faturas btn-trocar-plano">Trocar de plano &darr;</a>
                 </div>
             </section>
         </div>
+
+        <section class="trocar-plano" id="trocar-plano" aria-labelledby="titulo-trocar-plano">
+            <h2 id="titulo-trocar-plano">Trocar de plano</h2>
+            <p class="trocar-plano-intro">Escolha outro plano quando quiser. A mudança vale na hora, e a mensalidade em aberto passa a ter o novo valor.</p>
+
+            <div class="planos-opcoes">
+                <?php foreach ($planosDisponiveis as $opcao):
+                    $ehAtual = (int)$opcao['Id_Plano'] === $idPlanoAtual;
+                    $nomeOpcao = $opcao['Nome_Plano'];
+                    $precoOpcao = number_format((float)$opcao['Preco'], 2, ',', '.');
+                    $beneficios = $beneficiosPlanos[strtolower($nomeOpcao)] ?? [];
+                ?>
+                <article class="plano-opcao<?php echo $ehAtual ? ' atual' : ''; ?>">
+                    <?php if ($ehAtual): ?><span class="selo-plano-atual">Seu plano</span><?php endif; ?>
+                    <h3><?php echo htmlspecialchars($nomeOpcao); ?></h3>
+                    <p class="plano-opcao-preco">R$ <?php echo $precoOpcao; ?> <span>/ mês</span></p>
+                    <?php if ($beneficios): ?>
+                        <ul>
+                            <?php foreach ($beneficios as $b): ?><li><?php echo htmlspecialchars($b); ?></li><?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                    <?php if ($ehAtual): ?>
+                        <button type="button" class="btn-escolher-plano" disabled>Plano atual</button>
+                    <?php else: ?>
+                        <form action="alterarPlano.php" method="post"
+                              onsubmit="return confirm(<?php echo htmlspecialchars(json_encode('Trocar para o plano ' . $nomeOpcao . ' (R$ ' . $precoOpcao . '/mês)?', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES); ?>);">
+                            <input type="hidden" name="csrf" value="<?php echo $_SESSION['csrf_plano']; ?>">
+                            <input type="hidden" name="id_plano" value="<?php echo (int)$opcao['Id_Plano']; ?>">
+                            <button type="submit" class="btn-escolher-plano">Mudar para <?php echo htmlspecialchars($nomeOpcao); ?></button>
+                        </form>
+                    <?php endif; ?>
+                </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
 
         <section class="acesso-rapido">
             <h2>Cobertura do plano</h2>

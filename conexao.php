@@ -12,6 +12,11 @@
  *   GOOGLE_MAPS_API_KEY  -> chave do Google Maps (opcional, usada na Rede Credenciada)
  *   MP_ACCESS_TOKEN      -> Access Token do Mercado Pago (Checkout Pro, usado no Financeiro).
  *                           Use o token de TESTE (APP_USR-... da conta de teste) durante o TCC.
+ *   RESEND_API_KEY       -> API Key do Resend (re_...), usada para enviar o e-mail de "Esqueci minha senha".
+ *                           É a mesma conta Resend ligada ao Supabase (Authentication > Emails > SMTP).
+ *   RESEND_FROM          -> remetente, ex: "Acesso+ <nao-responda@seudominio.com.br>" (domínio verificado no Resend)
+ *   SITE_URL             -> (opcional) endereço público do site, ex: https://xxxx.up.railway.app
+ *                           usado para montar o link do e-mail de recuperação de senha.
  */
 
 date_default_timezone_set('America/Sao_Paulo');
@@ -28,6 +33,10 @@ if (is_readable(__DIR__ . '/.env')) {
 
 $google_maps_api_key = getenv('GOOGLE_MAPS_API_KEY') ?: '';
 $mp_access_token = getenv('MP_ACCESS_TOKEN') ?: '';
+$resend_api_key = getenv('RESEND_API_KEY') ?: '';
+// Remetente dos e-mails. Precisa ser de um domínio verificado no Resend.
+// Sem domínio verificado, o Resend só aceita "onboarding@resend.dev" e só entrega para o e-mail dono da conta Resend.
+$resend_from = getenv('RESEND_FROM') ?: 'Acesso+ <onboarding@resend.dev>';
 
 /**
  * O PostgreSQL devolve nomes de colunas em minúsculas (id_user), mas o código do site
@@ -107,6 +116,77 @@ function garantir_estrutura(Banco $con): void
         UNIQUE (Id_User, Mes_Referencia)
     )");
     $con->query("ALTER TABLE Faturas ENABLE ROW LEVEL SECURITY");
+}
+
+/**
+ * Troca o plano de um paciente.
+ * A fatura do mês atual que ainda não foi paga (nem está em processamento no Mercado Pago)
+ * passa a ter o valor do novo plano. Faturas já pagas não mudam.
+ * Retorna o novo plano (Id_Plano, Nome_Plano, Preco) ou null se o plano não existir.
+ */
+function alterar_plano_usuario(Banco $con, int $idUser, int $idPlano): ?array
+{
+    $r = $con->query("SELECT Id_Plano, Nome_Plano, Preco FROM Planos WHERE Id_Plano = ?", [$idPlano]);
+    $plano = $r ? $r->fetch_assoc() : null;
+    if (!$plano || $idUser <= 0) return null;
+
+    $ok = $con->query("UPDATE Cadastro_Users SET Id_Plano = ? WHERE Id_User = ?", [$idPlano, $idUser]);
+    if (!$ok || $ok->num_rows === 0) return null;
+
+    $con->query(
+        "UPDATE Faturas SET Valor = ?
+         WHERE Id_User = ? AND Mes_Referencia = ? AND Status_Fatura <> 'Pago' AND Id_Pagamento_MP IS NULL",
+        [$plano['Preco'], $idUser, date('m/Y')]
+    );
+    return $plano;
+}
+
+/** Endereço público do site (SITE_URL ou o endereço que o navegador usou). */
+function url_base_site(): string
+{
+    $siteUrl = getenv('SITE_URL') ?: '';
+    if ($siteUrl !== '') return rtrim($siteUrl, '/');
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    return ($https ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost')
+        . rtrim(dirname($_SERVER['PHP_SELF'] ?? '/'), '/\\');
+}
+
+/**
+ * Envia um e-mail pela API do Resend (https://resend.com/docs/api-reference/emails/send-email).
+ * Usa HTTPS (porta 443), que funciona no Railway; o SMTP (portas 25/465/587) costuma ser bloqueado lá.
+ * Retorna true se o Resend aceitou o envio.
+ */
+function enviar_email(string $para, string $assunto, string $html, string $texto = ''): bool
+{
+    global $resend_api_key, $resend_from;
+    if ($resend_api_key === '') return false;
+
+    $ch = curl_init('https://api.resend.com/emails');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_TIMEOUT => 15,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . $resend_api_key,
+            'Content-Type: application/json',
+        ],
+        CURLOPT_POSTFIELDS => json_encode(array_filter([
+            'from' => $resend_from,
+            'to' => [$para],
+            'subject' => $assunto,
+            'html' => $html,
+            'text' => $texto,
+        ])),
+    ]);
+    $resposta = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $erroCurl = curl_error($ch);
+    curl_close($ch);
+
+    if ($httpCode >= 200 && $httpCode < 300) return true;
+    $dados = json_decode((string)$resposta, true) ?: [];
+    error_log('[Acesso+] Resend HTTP ' . $httpCode . ': ' . ($dados['message'] ?? $erroCurl ?: 'erro desconhecido'));
+    return false;
 }
 
 /** Resultado de uma consulta, com a mesma "cara" do mysqli (num_rows e fetch_assoc). */

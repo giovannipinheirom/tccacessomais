@@ -625,3 +625,142 @@ a.card-link:focus-visible { outline: 3px solid #2668D7; outline-offset: 3px; }
 .btn-ver-faturas:hover {
     text-decoration: underline;
 }
+
+/* ---------- Trocar de plano (Meu plano) ---------- */
+.btn-trocar-plano {
+    display: block;
+    margin-top: 12px;
+}
+
+.alerta-plano {
+    max-width: 1100px;
+    margin: 0 auto 24px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.alerta-plano.sucesso { background-color: #dcfce7; border-color: #86efac; color: #166534; }
+.alerta-plano.erro { background-color: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+.trocar-plano {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    scroll-margin-top: 24px;
+}
+
+.trocar-plano h2 {
+    margin-bottom: 8px;
+    color: #0f172a;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.trocar-plano-intro {
+    max-width: 620px;
+    margin: 0 auto 24px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.planos-opcoes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+.plano-opcao {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    padding: 28px 24px 24px;
+}
+
+.plano-opcao.atual {
+    border: 2px solid #2668D7;
+    box-shadow: 0 12px 28px rgba(15, 37, 158, 0.1);
+}
+
+.selo-plano-atual {
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    padding: 4px 12px;
+    background-color: #2668D7;
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.plano-opcao h3 {
+    color: #1e293b;
+    font-size: 1.2rem;
+}
+
+.plano-opcao-preco {
+    margin: 6px 0 16px;
+    color: #0f259e;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.plano-opcao-preco span {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.plano-opcao ul {
+    flex: 1;
+    margin-bottom: 20px;
+    padding-left: 18px;
+    color: #475569;
+    font-size: 0.92rem;
+    line-height: 1.8;
+}
+
+.btn-escolher-plano {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #2668D7;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-escolher-plano:hover:not(:disabled) {
+    background-color: #0f259e;
+    transform: translateY(-2px);
+}
+
+.btn-escolher-plano:focus-visible {
+    outline: 3px solid #0f259e;
+    outline-offset: 2px;
+}
+
+.btn-escolher-plano:disabled {
+    background-color: #e2e8f0;
+    color: #475569;
+    cursor: default;
+}
+
+body.alto-contraste .plano-opcao {
+    background: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #555 !important;
+}
+
+body.alto-contraste .plano-opcao.atual { border-color: #ffffff !important; }
+body.alto-contraste .plano-opcao li { color: #ffffff !important; }

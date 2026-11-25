@@ -6,8 +6,8 @@ garantir_estrutura($con);
  * Recuperação de senha de PACIENTES e PROFISSIONAIS.
  * 1. Procura o e-mail na tabela certa (conforme o tipo de conta).
  * 2. Gera um token aleatório válido por 1 hora e grava no cadastro.
- * 3. Tenta enviar o link por e-mail. Se o servidor não tiver envio de e-mail configurado
- *    (caso do Railway), mostra o link na tela para fins de demonstração do TCC.
+ * 3. Envia o link por e-mail pelo Resend (variável RESEND_API_KEY, a mesma conta ligada ao Supabase).
+ *    Se o Resend ainda não estiver configurado, mostra o link na tela (modo de demonstração do TCC).
  */
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -24,25 +24,45 @@ $tabelas = [
 ];
 $t = $tabelas[$tipo];
 
-$linkRecuperacao = null;
-$emailEnviado = false;
+$emailConfigurado = $resend_api_key !== '';
+$linkDemonstracao = null; // só usado quando o Resend não está configurado
+$falhaEnvio = false;
 
-$verifica = $con->query("SELECT {$t['id']}, {$t['nome']} FROM {$t['tabela']} WHERE {$t['email']} = ?", [$email]);
-if ($verifica && $verifica->num_rows > 0) {
+$verifica = $con->query("SELECT {$t['id']}, {$t['nome']}, {$t['email']} FROM {$t['tabela']} WHERE LOWER({$t['email']}) = LOWER(?)", [$email]);
+if ($email !== '' && $verifica && $verifica->num_rows > 0) {
     $usuario = $verifica->fetch_assoc();
     $token = bin2hex(random_bytes(16));
     $expiracao = date("Y-m-d H:i:s", strtotime('+1 hour'));
     $con->query("UPDATE {$t['tabela']} SET Token_Senha = ?, Expiracao_Token = ? WHERE {$t['id']} = ?", [$token, $expiracao, (int)$usuario[$t['id']]]);
 
-    $protocolo = (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' || !empty($_SERVER['HTTPS'])) ? 'https' : 'http';
-    $linkRecuperacao = $protocolo . "://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\') . "/redefinirSenha.php?token=" . $token;
+    $linkRecuperacao = url_base_site() . "/redefinirSenha.php?token=" . $token;
 
-    $mensagem = "Olá, " . $usuario[$t['nome']] . "!\n\n"
-        . "Você solicitou a redefinição da sua senha no Acesso+.\n"
-        . "Clique no link abaixo para criar uma nova senha:\n" . $linkRecuperacao . "\n\n"
-        . "Se você não solicitou isso, ignore este e-mail. O link expira em 1 hora.";
-    $headers = "From: nao-responda@" . $_SERVER['HTTP_HOST'] . "\r\nContent-Type: text/plain; charset=UTF-8";
-    $emailEnviado = @mail($email, "Recuperacao de Senha - Acesso+", $mensagem, $headers);
+    if ($emailConfigurado) {
+        $nome = htmlspecialchars(explode(' ', trim($usuario[$t['nome']]))[0]);
+        $linkHtml = htmlspecialchars($linkRecuperacao);
+        $html = <<<HTML
+<div style="background:#f8fafc;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:32px;">
+    <h1 style="margin:0 0 8px;font-size:22px;color:#0f259e;">Acesso+</h1>
+    <h2 style="margin:0 0 20px;font-size:18px;color:#0f172a;">Redefinição de senha</h2>
+    <p style="margin:0 0 12px;line-height:1.5;">Olá, {$nome}!</p>
+    <p style="margin:0 0 24px;line-height:1.5;">Recebemos um pedido para redefinir a senha da sua conta no Acesso+. Clique no botão abaixo para criar uma nova senha:</p>
+    <p style="text-align:center;margin:0 0 24px;">
+      <a href="{$linkHtml}" style="display:inline-block;background:#2668D7;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:10px;">Criar nova senha</a>
+    </p>
+    <p style="margin:0 0 8px;font-size:13px;color:#64748b;line-height:1.5;">Se o botão não funcionar, copie e cole este endereço no navegador:<br><a href="{$linkHtml}" style="color:#2668D7;word-break:break-all;">{$linkHtml}</a></p>
+    <p style="margin:16px 0 0;font-size:13px;color:#64748b;line-height:1.5;">O link expira em 1 hora. Se você não fez este pedido, ignore este e-mail: sua senha continua a mesma.</p>
+  </div>
+</div>
+HTML;
+        $texto = "Olá, " . $usuario[$t['nome']] . "!\n\n"
+            . "Você solicitou a redefinição da sua senha no Acesso+.\n"
+            . "Acesse o link abaixo para criar uma nova senha:\n" . $linkRecuperacao . "\n\n"
+            . "Se você não solicitou isso, ignore este e-mail. O link expira em 1 hora.";
+        $falhaEnvio = !enviar_email($usuario[$t['email']], "Redefinição de senha - Acesso+", $html, $texto);
+    } else {
+        $linkDemonstracao = $linkRecuperacao;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -60,12 +80,16 @@ if ($verifica && $verifica->num_rows > 0) {
             <div class="esquerda">
                 <div class="formLogin" style="width: 100%;">
                     <h2>Recuperar Senha</h2>
-                    <?php if ($linkRecuperacao && !$emailEnviado): ?>
+                    <?php if ($linkDemonstracao): ?>
                         <p style="text-align: center; color: #475569; margin-bottom: 16px;">
-                            O servidor de demonstração não envia e-mails. Use o botão abaixo para criar a nova senha
-                            (em produção, este link chegaria no e-mail cadastrado).
+                            O envio de e-mails ainda não foi configurado no servidor (variável RESEND_API_KEY).
+                            Use o botão abaixo para criar a nova senha (com o Resend configurado, este link chega no e-mail cadastrado).
                         </p>
-                        <a href="<?php echo htmlspecialchars($linkRecuperacao); ?>" class="esqueci-senha" style="display:block; text-align:center; font-weight:600;">Criar nova senha &rarr;</a>
+                        <a href="<?php echo htmlspecialchars($linkDemonstracao); ?>" class="esqueci-senha" style="display:block; text-align:center; font-weight:600;">Criar nova senha &rarr;</a>
+                    <?php elseif ($falhaEnvio): ?>
+                        <p style="text-align: center; color: #ef4444;">
+                            Não foi possível enviar o e-mail agora. Tente novamente em alguns minutos.
+                        </p>
                     <?php else: ?>
                         <p style="text-align: center; color: #475569;">
                             Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha. Verifique também a caixa de spam.

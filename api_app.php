@@ -490,10 +490,13 @@ switch ($action) {
             responder(['ok' => false, 'erro' => 'Plano inválido.'], 400);
         }
 
-        $stmt_sql = "UPDATE Cadastro_Users SET Id_Plano = ? WHERE Id_User = ?";
-        $stmt_params = [$idPlano, $idUser];
-        $ok = $con->query($stmt_sql, $stmt_params) !== false;
-        responder(['ok' => (bool)$ok, 'id_plano' => $idPlano]);
+        // Mesma regra do site (aba Meu plano): a fatura em aberto do mês passa a ter o valor do novo plano
+        garantir_estrutura($con);
+        $plano = alterar_plano_usuario($con, $idUser, $idPlano);
+        if (!$plano) {
+            responder(['ok' => false, 'erro' => 'Plano ou paciente não encontrado.'], 400);
+        }
+        responder(['ok' => true, 'id_plano' => $idPlano, 'plano' => $plano['Nome_Plano'], 'preco_plano' => (float)$plano['Preco']]);
         break;
 
     // =========================================================================
