@@ -124,3 +124,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     line-height: 1.4;
     text-align: left;
 }
+
+/* Validador de CPF do cadastro */
+input.cpf-invalido { border-color: #ef4444; background-color: #fff5f5; }
+input.cpf-invalido:focus { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
+input.cpf-valido { border-color: #16a34a; }
+.aviso-cpf:empty { display: none; }
+.aviso-cpf {
+    margin-top: -4px;
+    color: #b91c1c;
+    font-size: 0.82rem;
+    text-align: left;
+    width: 100%;
+}

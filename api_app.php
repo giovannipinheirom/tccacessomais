@@ -245,6 +245,9 @@ switch ($action) {
         }
 
         $cpfLimpo = apenasDigitos($cpf);
+        if (!cpf_valido($cpfLimpo)) {
+            responder(['ok' => false, 'erro' => 'CPF inválido. Confira os números digitados.'], 400);
+        }
         if (strlen($cpfLimpo) === 11) {
             $cpfFormatado = substr($cpfLimpo, 0, 3) . '.' . substr($cpfLimpo, 3, 3) . '.' . substr($cpfLimpo, 6, 3) . '-' . substr($cpfLimpo, 9, 2);
         } else {

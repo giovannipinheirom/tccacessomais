@@ -5,7 +5,7 @@ include "conexao.php";
 $nome =trim((string)($_POST['nome'] ?? ''));
 $email =trim((string)($_POST['email'] ?? ''));
 $telefone =trim((string)($_POST['telefone'] ?? ''));
-$CPF =trim((string)($_POST['CPF'] ?? ''));
+$CPF = preg_replace('/\D/', '', (string)($_POST['CPF'] ?? '')); // grava só os números
 $CEP = preg_replace('/\D/', '', (string)($_POST['CEP'] ?? '')); // só números (evita URL inválida nas APIs de CEP)
 $data_nasc =trim((string)($_POST['data_nasc'] ?? ''));
 $genero =trim((string)($_POST['genero'] ?? ''));
@@ -15,8 +15,9 @@ $senha = (string)($_POST['senha'] ?? '');
 
 // Confere os dados obrigatórios e as regras de senha também no servidor
 $faltandoSenha = problemas_senha((string)$senha);
-if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
-    $motivo = $faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.';
+if (!cpf_valido($CPF) || !filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
+    $motivo = !cpf_valido($CPF) ? 'CPF inválido. Confira os números digitados.'
+        : ($faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.');
     echo "<script>alert(" . json_encode($motivo, JSON_UNESCAPED_UNICODE) . "); window.history.back();</script>";
     exit();
 }

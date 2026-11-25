@@ -8,20 +8,21 @@ $registro = trim((string)($_POST['registro'] ?? ''));
 $uf_registro = trim((string)($_POST['uf_registro'] ?? ''));
 $especialidade = trim((string)($_POST['especialidade'] ?? ''));
 $cep = preg_replace('/\D/', '', (string)($_POST['CEP'] ?? '')); // só números (evita URL inválida nas APIs de CEP)
-$cpf = trim((string)($_POST['CPF'] ?? ''));
+$cpf = preg_replace('/\D/', '', (string)($_POST['CPF'] ?? '')); // grava só os números
 $data_nasc = trim((string)($_POST['data_nasc'] ?? ''));
 $genero = trim((string)($_POST['genero'] ?? ''));
 $senha = (string)($_POST['senha'] ?? '');
 
 // Confere os dados obrigatórios e as regras de senha também no servidor
 $faltandoSenha = problemas_senha((string)$senha);
-if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
-    $motivo = $faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.';
+if (!cpf_valido($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL) || $faltandoSenha) {
+    $motivo = !cpf_valido($cpf) ? 'CPF inválido. Confira os números digitados.'
+        : ($faltandoSenha ? 'A senha precisa ' . implode(', ', $faltandoSenha) . '.' : 'Informe um e-mail válido.');
     echo "<script>alert(" . json_encode($motivo, JSON_UNESCAPED_UNICODE) . "); window.history.back();</script>";
     exit();
 }
 
-$comandoVerifica = "SELECT * FROM Cadastro_Profissionais WHERE CPF_Profissional = ? OR Email_Profissional = ? OR Registro_Profissional = ?";
+$comandoVerifica = "SELECT * FROM Cadastro_Profissionais WHERE REPLACE(REPLACE(CPF_Profissional, '.', ''), '-', '') = ? OR Email_Profissional = ? OR Registro_Profissional = ?";
 $resultadoVerifica = $con->query($comandoVerifica, [$cpf, $email, $registro]);
 
 if($resultadoVerifica && $resultadoVerifica->num_rows > 0)

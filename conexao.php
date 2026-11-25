@@ -138,6 +138,27 @@ function garantir_estrutura(Banco $con): void
 /** Horários de atendimento da rede (consultas de 1 hora, pausa para o almoço às 12h). */
 const HORARIOS_EXPEDIENTE = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
+/**
+ * Validador de CPF: confere só o cálculo dos dois dígitos verificadores (não consulta a Receita).
+ * Aceita com ou sem pontuação. Rejeita sequências repetidas como 111.111.111-11.
+ */
+function cpf_valido(string $cpf): bool
+{
+    $cpf = preg_replace('/\D/', '', $cpf);
+    if (strlen($cpf) !== 11 || preg_match('/^(\d)\1{10}$/', $cpf)) return false;
+
+    // 1º dígito: pesos 10 a 2 nos 9 primeiros números; 2º dígito: pesos 11 a 2 nos 10 primeiros
+    for ($tamanho = 9; $tamanho <= 10; $tamanho++) {
+        $soma = 0;
+        for ($i = 0; $i < $tamanho; $i++) {
+            $soma += (int)$cpf[$i] * ($tamanho + 1 - $i);
+        }
+        $digito = ($soma * 10) % 11 % 10; // resto 10 vira 0
+        if ($digito !== (int)$cpf[$tamanho]) return false;
+    }
+    return true;
+}
+
 /** Regras de senha do cadastro e da recuperação: retorna a lista do que falta (vazia = senha válida). */
 function problemas_senha(string $senha): array
 {

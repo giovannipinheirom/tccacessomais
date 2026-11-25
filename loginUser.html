@@ -40,7 +40,7 @@
                     <input type="text" name="nome" placeholder="Digite seu nome completo" aria-label="Digite seu nome completo" required>
                     <input type="email" name="email" placeholder="Digite seu e-mail" aria-label="Digite seu e-mail" required>
                     <input type="text" name="telefone" id="" required maxlength="11" placeholder="Número de telefone" aria-label="Número de telefone"> 
-                    <input type="text" name="CPF" placeholder="Digite seu CPF" aria-label="Digite seu CPF" required maxlength="11">
+                    <input type="text" name="CPF" placeholder="Digite seu CPF" aria-label="Digite seu CPF" required maxlength="14" inputmode="numeric" autocomplete="off" data-validar-cpf>
                     
                     <div class="campos-duplos">
                         <input type="text" name="CEP" placeholder="CEP" aria-label="CEP" required class="input-curto" maxlength="8">
@@ -88,6 +88,7 @@
                 </div>
             </div>
         </section>
+        <script src="js/cpf.js"></script>
         <script src="js/loginUser.js"></script>
     <script>
         // Guarda a página que o usuário tentou abrir (ex.: atalhos da página inicial) para voltar a ela após o login
