@@ -1,0 +1,31 @@
+/* Páginas institucionais: Sobre, Contato, Privacidade, Termos e Administrador */
+.pagina { max-width: 900px; margin: 48px auto; padding: 0 24px; color: #1e293b; line-height: 1.7; }
+.pagina h1 { color: #0f259e; font-size: 2rem; margin-bottom: 8px; }
+.pagina .subtitulo { color: #475569; margin-bottom: 32px; }
+.pagina h2 { color: #0f259e; font-size: 1.25rem; margin: 28px 0 8px; }
+.pagina p, .pagina li { font-size: 1.05rem; margin-bottom: 10px; }
+.pagina ul { padding-left: 22px; }
+.pagina .destaques { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 24px 0; }
+.pagina .destaque { background: #f1f5ff; border: 1px solid #dbe4ff; border-radius: 12px; padding: 18px; }
+.pagina .destaque h3 { color: #2668D7; font-size: 1.05rem; margin-bottom: 6px; }
+.form-contato { display: grid; gap: 14px; margin-top: 16px; }
+.form-contato label { font-weight: 600; color: #334155; display: block; margin-bottom: 4px; }
+.form-contato input, .form-contato select, .form-contato textarea {
+    width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1rem; background: #fff;
+}
+.form-contato textarea { min-height: 140px; resize: vertical; }
+.form-contato input:focus, .form-contato select:focus, .form-contato textarea:focus { outline: 3px solid #93c5fd; border-color: #2668D7; }
+.form-contato button, .btn-primario {
+    background: #2668D7; color: #fff; border: 0; border-radius: 10px; padding: 12px 22px; font-size: 1rem; font-weight: 600; cursor: pointer; justify-self: start;
+}
+.form-contato button:hover, .btn-primario:hover { background: #0f259e; }
+.aviso { padding: 14px 16px; border-radius: 10px; margin: 16px 0; }
+.aviso.ok { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.aviso.erro { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.footer-copy { color: #c7d2fe; text-align: center; margin-top: 24px; font-size: 0.9rem; }
+.footer-block a { display: block; }
+@media (max-width: 760px) {
+    nav { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+    .links-nav { gap: 18px; flex-wrap: wrap; }
+    .footer-content { flex-direction: column; gap: 24px; }
+}
